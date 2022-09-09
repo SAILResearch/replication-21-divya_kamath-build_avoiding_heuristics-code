@@ -1,0 +1,5 @@
+Average Time Reqd in EMV-NFC-Paycard-Enrollment.csv = 3.8410596026490067 
+Average Builds Reqd in EMV-NFC-Paycard-Enrollment.csv = 3.4482758620689653 
+Average Total Delay in EMV-NFC-Paycard-Enrollment.csv = 48.0 
+Average Failed Identified in EMV-NFC-Paycard-Enrollment.csv = 0.0 
+Average Failed Unidentified in EMV-NFC-Paycard-Enrollment.csv = 100.0 

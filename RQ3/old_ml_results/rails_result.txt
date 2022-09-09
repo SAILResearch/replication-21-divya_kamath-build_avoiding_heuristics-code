@@ -1,0 +1,5 @@
+Average Time Reqd in rails.csv = 31.248240772782193 
+Average Builds Reqd in rails.csv = 24.983073798239676 
+Average Total Delay in rails.csv = 0.0 
+Average Failed Identified in rails.csv = 100.0 
+Average Failed Unidentified in rails.csv = 0.0 

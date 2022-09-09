@@ -1,0 +1,5 @@
+Average Time Reqd in AcDisplay.csv = 21.928790379627447 
+Average Builds Reqd in AcDisplay.csv = 16.831683168316832 
+Average Total Delay in AcDisplay.csv = 148.0 
+Average Failed Identified in AcDisplay.csv = 96.55172413793103 
+Average Failed Unidentified in AcDisplay.csv = 3.4482758620689653 

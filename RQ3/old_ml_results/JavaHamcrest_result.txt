@@ -1,0 +1,5 @@
+Average Time Reqd in JavaHamcrest.csv = 6.204933586337761 
+Average Builds Reqd in JavaHamcrest.csv = 4.0 
+Average Total Delay in JavaHamcrest.csv = 84.0 
+Average Failed Identified in JavaHamcrest.csv = 0.0 
+Average Failed Unidentified in JavaHamcrest.csv = 100.0 

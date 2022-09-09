@@ -1,0 +1,5 @@
+Average Time Reqd in gradle.csv = 21.782648653041832 
+Average Builds Reqd in gradle.csv = 18.850987432675044 
+Average Total Delay in gradle.csv = 1640.0 
+Average Failed Identified in gradle.csv = 70.0 
+Average Failed Unidentified in gradle.csv = 30.0 

@@ -1,0 +1,5 @@
+Average Time Reqd in BuildCraft.csv = 0.0 
+Average Builds Reqd in BuildCraft.csv = 0.0 
+Average Total Delay in BuildCraft.csv = 12.0 
+Average Failed Identified in BuildCraft.csv = 0.0 
+Average Failed Unidentified in BuildCraft.csv = 100.0 
