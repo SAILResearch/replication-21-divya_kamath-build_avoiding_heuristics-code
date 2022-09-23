@@ -5,7 +5,7 @@ import numpy as np
 import math
 import csv
 
-dataset_list = ['gradle.csv', 'vagrant.csv', 'geoserver.csv', 'cloudify.csv', 'cloud_controller_ng.csv']
+dataset_list = ['rails.csv', 'jruby.csv', 'metasploit-framework.csv', 'cloudify.csv', 'vagrant.csv', 'rubinius.csv', 'open-build-service.csv', 'gradle.csv', 'sonarqube.csv', 'loomio.csv', 'fog.csv', 'opal.csv', 'cloud_controller_ng.csv', 'puppet.csv', 'concerto.csv', 'sufia.csv', 'geoserver.csv', 'orbeon-forms.csv', 'graylog2-server.csv', 'heroku.csv']
 
 for dataset in dataset_list:
 	path = 'even_data/' + dataset
