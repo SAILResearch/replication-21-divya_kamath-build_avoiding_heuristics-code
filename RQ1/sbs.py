@@ -17,6 +17,29 @@ def get_median(data):
         data[0] = median
     return data[0]
 
+def get_first_failures(df):
+    
+    results = df['tr_status'].tolist()
+    length = len(results)
+    verdict = ['keep']
+    prev = results[0]
+    
+    for i in range(1, length):
+        if results[i] == 0:
+            if prev == 0:
+                verdict.append('discard')
+                #print(i+1)
+            else:
+                verdict.append('keep')
+        else:
+            verdict.append('keep')
+        prev = results[i]
+    
+    df['verdict'] = verdict
+    df = df[ df['verdict'] == 'keep' ]
+    df.drop('verdict', inplace=True, axis=1)
+    return df
+
 def output_values(Y_data):
     Y_t = []
     for e in Y_data:
@@ -27,9 +50,9 @@ def output_values(Y_data):
     return Y_t
 
 def get_data(project_path):
-	columns = ['git_num_all_built_commits', 'git_diff_src_churn', 'git_diff_test_churn', 'gh_diff_files_modified', 'tr_status']
+	columns = ['tr_build_id', 'git_num_all_built_commits', 'git_diff_src_churn', 'git_diff_test_churn', 'gh_diff_files_modified', 'tr_status']
 	df = pd.read_csv(project_path, usecols = columns)
-	src_churn = df['git_diff_src_churn'].tolist()
+	'''src_churn = df['git_diff_src_churn'].tolist()
 	file_churn = df['gh_diff_files_modified'].tolist()
 	test_churn = df['git_diff_test_churn'].tolist()
 	num_commits = df['git_num_all_built_commits'].tolist()
@@ -40,7 +63,8 @@ def get_data(project_path):
 		argument.append([src_churn[index], file_churn[index], test_churn[index], num_commits[index]])
 
 	X = np.array(argument)
-	y = np.array(build_result)
+	y = np.array(build_result)'''
+	df['tr_status'] = output_values(project['tr_status'])
 
 	return X, y
 
@@ -52,88 +76,116 @@ def get_duration_data(project_path):
 
 
 def with_cv_val():
-	#project_names=['rails/rails', 'myronmarston/vcr', 'concerto/concerto', 'benhoskings/babushka', 'rubinius/rubinius', 'rubychan/coderay', 'codeforamerica/adopt-a-hydrant', 'radiant/radiant', 'saberma/shopqi', 'rspec/rspec-core', 'engineyard/engineyard', 'plataformatec/devise', 'rspec/rspec-rails', 'karmi/retire', 'sferik/rails_admin', 'tdiary/tdiary-core', 'dkubb/veritas', 'sstephenson/sprockets', 'thoughtbot/factory_girl', 'weppos/whois', 'errbit/errbit', 'padrino/padrino-framework', 'thoughtbot/paperclip', 'plataformatec/simple_form', 'huerlisi/bookyt', 'hotsh/rstat.us', 'mperham/dalli', 'innoq/iqvoc', 'cheezy/page-object', 'justinfrench/formtastic', 'nov/fb_graph', 'assaf/vanity', 'activerecord-hackery/ransack', 'jimweirich/rake', 'rspec/rspec-mocks', 'neo4jrb/neo4j', 'diaspora/diaspora', 'test-unit/test-unit', 'Shopify/liquid', 'activeadmin/activeadmin', 'ari/jobsworth', 'thoughtbot/shoulda-matchers', 'rubygems/rubygems', 'rdoc/rdoc', 'spree/spree', 'rubyzip/rubyzip', 'pry/pry', 'jruby/activerecord-jdbc-adapter', 'sass/sass', 'jruby/warbler', 'fatfreecrm/fat_free_crm', 'rspec/rspec-expectations', 'excon/excon', 'typus/typus', 'heroku/heroku', 'nahi/httpclient', 'podio/podio-rb', 'maxdemarzi/neography', 'locomotivecms/engine', 'gedankenstuecke/snpr', 'peter-murach/github', 'jnicklas/capybara', 'travis-ci/travis-core', 'presidentbeef/brakeman', 'mikel/mail', 'randym/axlsx', 'kmuto/review', 'danielweinmann/catarse', 'middleman/middleman', 'rubyworks/facets', 'railsbp/rails_best_practices', 'comfy/comfortable-mexican-sofa', 'mongoid/moped', 'wr0ngway/rubber', 'rslifka/elasticity', 'lsegal/yard', 'NoamB/sorcery', 'puppetlabs/puppet', 'mitchellh/vagrant', 'ai/r18n', 'celluloid/celluloid', 'jordansissel/fpm', 'neo4jrb/neo4j-core', 'orbeon/orbeon-forms', 'redis/redis-rb', 'pivotal/pivotal_workstation', 'jruby/jruby', 'louismullie/treat', 'puma/puma', 'pophealth/popHealth', 'twitter/twitter-cldr-rb', 'gistflow/gistflow', 'adamfisk/LittleProxy', 'awestruct/awestruct', 'jnunemaker/httparty', 'Graylog2/graylog2-server', 'neuland/jade4j', 'sensu/sensu', 'shawn42/gamebox', 'applicationsonline/librarian', 'haml/haml', 'sporkmonger/addressable', 'google/google-api-ruby-client', 'elm-city-craftworks/practicing-ruby-web', 'sunlightlabs/scout', 'floere/phony', 'data-axle/cassandra_object', 'typhoeus/typhoeus', 'shoes/shoes4', 'troessner/reek', 'recurly/recurly-client-ruby', 'CloudifySource/cloudify', 'puppetlabs/puppetlabs-firewall', 'typhoeus/ethon', 'sparklemotion/nokogiri', 'tinkerpop/blueprints', 'tinkerpop/rexster', 'thinkaurelius/titan', 'openSUSE/open-build-service', 'engineyard/ey-cloud-recipes', 'git/git-scm.com', 'honeybadger-io/honeybadger-ruby', 'azagniotov/stubby4j', 'sferik/twitter', 'calagator/calagator', 'openshift/rhc', 'codefirst/AsakusaSatellite', 'DatabaseCleaner/database_cleaner', 'burke/zeus', 'fog/fog', 'twilio/twilio-java', 'twitter/commons', 'Albacore/albacore', 'prawnpdf/prawn', 'enspiral/loomio', 'refinery/refinerycms', 'sevntu-checkstyle/sevntu.checkstyle', 'opal/opal', 'graphhopper/graphhopper', 'sparklemotion/mechanize', 'SomMeri/less4j', 'tent/tentd', 'searchbox-io/Jest', 'square/dagger', 'google/truth', 'square/okhttp', 'square/retrofit', 'maxcom/lorsource', 'jneen/rouge', 'jmkgreen/morphia', 'SpontaneousCMS/spontaneous', 'everzet/capifony', 'killbill/killbill', 'scobal/seyren', 'intuit/simple_deploy', 'projectblacklight/blacklight', 'rapid7/metasploit-framework', 'amahi/platform', 'vcr/vcr', 'Findwise/Hydra', 'structr/structr', 'sachin-handiekar/jInstagram', 'nutzam/nutz', 'slim-template/slim', 'puppetlabs/puppetlabs-stdlib', 'puppetlabs/facter', 'phoet/on_ruby', 'dreamhead/moco', 'travis-ci/travis.rb', 'cloudfoundry/cloud_controller_ng', 'square/assertj-android', 'jmxtrans/jmxtrans', 'twitter/secureheaders', 'nanoc/nanoc', 'expertiza/expertiza', 'asciidoctor/asciidoctor', 'rubber/rubber', 'openMF/mifosx', 'mybatis/mybatis-3', 'test-kitchen/test-kitchen', 'owlcs/owlapi', 'engineyard/engineyard-serverside', 'selendroid/selendroid', 'ruboto/ruboto', 'openfoodfoundation/openfoodnetwork', 'stephanenicolas/robospice', 'joscha/play-authenticate', 'undera/jmeter-plugins', 'cantino/huginn', 'resque/resque', 'albertlatacz/java-repl', 'l0rdn1kk0n/wicket-bootstrap', 'dynjs/dynjs', 'abarisain/dmix', 'dropwizard/dropwizard', 'dropwizard/metrics', 'jberkel/sms-backup-plus', 'rubymotion/sugarcube', 'naver/yobi', 'Shopify/active_shipping', 'projecthydra/sufia', 'rubymotion/BubbleWrap', 'pivotal-sprout/sprout-osx-apps', 'chef/omnibus', 'JodaOrg/joda-time', 'EmmanuelOga/ffaker', 'kostya/eye', 'laurentpetit/ccw', 'puniverse/quasar', 'simpligility/android-maven-plugin', 'jsonld-java/jsonld-java', 'travis-ci/travis-cookbooks', 'FenixEdu/fenixedu-academic', 'threerings/playn', 'restlet/restlet-framework-java', 'jedi4ever/veewee', 'sensu/sensu-community-plugins', 'OpenRefine/OpenRefine', 'chef/chef', 'fluent/fluentd', 'perwendel/spark', 'joelittlejohn/jsonschema2pojo', 'jOOQ/jOOQ', 'springside/springside4', 'github/hub', 'johncarl81/parceler', 'discourse/onebox', 'julianhyde/optiq', 'ruby-ldap/ruby-net-ldap', 'DSpace/DSpace', 'jeremyevans/sequel', 'bikeindex/bike_index', 'doanduyhai/Achilles', 'rackerlabs/blueflood', 'rodjek/librarian-puppet', 'p6spy/p6spy', 'square/wire', 'Nodeclipse/nodeclipse-1', 'rebelidealist/stripe-ruby-mock', 'checkstyle/checkstyle', 'elastic/logstash', 'airlift/airlift', 'lenskit/lenskit', 'MiniProfiler/rack-mini-profiler', 'geoserver/geoserver', 'ocpsoft/rewrite', 'Unidata/thredds', 'torakiki/pdfsam', 'loopj/android-async-http', 'feedbin/feedbin', 'recruit-tech/redpen', 'brettwooldridge/HikariCP', 'puppetlabs/marionette-collective', 'iipc/openwayback', 'caelum/vraptor4', 'dianping/cat', 'jphp-compiler/jphp', 'mockito/mockito', 'oblac/jodd', 'facebook/buck', 'facebook/presto', 'jpos/jPOS', 'hamstergem/hamster', 'mongodb/morphia', 'realestate-com-au/pact', 'inaturalist/inaturalist', 'jtwig/jtwig', 'go-lang-plugin-org/go-lang-idea-plugin', 'square/picasso', 'voltrb/volt', 'zxing/zxing', 'openaustralia/morph', 'GlowstoneMC/Glowstone', 'owncloud/android', 'JakeWharton/u2020', 'rpush/rpush', 'OneBusAway/onebusaway-android', 'rabbit-shocker/rabbit', 'azkaban/azkaban', 'relayrides/pushy', 'deeplearning4j/deeplearning4j', 'github/developer.github.com', 'xetorthio/jedis', 'FasterXML/jackson-core', 'FasterXML/jackson-databind', 'protostuff/protostuff', 'atmos/heaven', 'MrTJP/ProjectRed', 'lemire/RoaringBitmap', 'apache/drill', 'Kapeli/cheatsheets', 'gradle/gradle', 'OpenGrok/OpenGrok', 'spring-io/sagan', 'mendhak/gpslogger', 'thoughtbot/hound', 'teamed/qulice', 'jcabi/jcabi-aspects', 'jcabi/jcabi-github', 'jcabi/jcabi-http', 'yegor256/rultor', 'querydsl/querydsl', 'codevise/pageflow', 'grails/grails-core', 'weld/core', 'thatJavaNerd/JRAW', 'bndtools/bnd', 'igniterealtime/Openfire', 'zendesk/samson', 'bndtools/bndtools', 'xtreemfs/xtreemfs', 'puniverse/capsule', 'broadinstitute/picard', 'github/github-services', 'gavinlaking/vedeu', 'haiwen/seadroid', 'AChep/AcDisplay', 'GoClipse/goclipse', 'hsz/idea-gitignore', 'jsprit/jsprit', 'dblock/waffle', 'numenta/htm.java', 'rightscale/praxis', 'google/error-prone', 'datastax/ruby-driver', 'iluwatar/java-design-patterns', 'Netflix/Hystrix', 'oyachai/HearthSim', 'jayway/JsonPath', 'exteso/alf.io', 'spring-cloud/spring-cloud-config', 'validator/validator', 'HubSpot/jinjava', 'connectbot/connectbot', 'google/physical-web', 'myui/hivemall', 'MarkUsProject/Markus', 'jMonkeyEngine/jmonkeyengine', 'davidmoten/rxjava-jdbc', 'qos-ch/logback', 'Homebrew/homebrew-science', 'GoogleCloudPlatform/DataflowJavaSDK', 'SoftInstigate/restheart', 'naver/pinpoint', 'KronicDeth/intellij-elixir', 'embulk/embulk', 'loomio/loomio', 'openstreetmap/openstreetmap-website', 'activescaffold/active_scaffold', 'tananaev/traccar', 'SonarSource/sonarqube', 'grpc/grpc-java', 'psi-probe/psi-probe', 'orientation/orientation', 'square/keywhiz', 'aws/aws-sdk-java', 'Shopify/shipit-engine', 'perfectsense/brightspot-cms', 'jamesagnew/hapi-fhir']
 
 	project_names=['rails.csv', 'jruby.csv', 'metasploit-framework.csv', 'heroku.csv', 'vagrant.csv', 'opal.csv', 'cloudify.csv', 'cloud_controller_ng.csv', 'rubinius.csv', 'open-build-service.csv', 'gradle.csv', 'sonarqube.csv', 'loomio.csv', 'fog.csv', 'puppet.csv', 'concerto.csv', 'sufia.csv', 'geoserver.csv', 'orbeon-forms.csv', 'graylog2-server.csv']
 
-	for project in project_names[:]:
+	for p_name in project_names[:]:
 		
-		string = "../data/even_data/first_failures/train/" + project.split('.')[0] + "_train.csv"
-		X, y = get_data(string)
+		string = "../data/train/" + p_name.split('.')[0] + "_train.csv"
+		train_data = get_data(string)
 
-		KF = KFold(n_splits=10)
+		n_estimators = [int(x) for x in np.linspace(start=200, stop=2000, num=10)]
+		max_depth = [int(x) for x in np.linspace(10, 110, num=5)]
+
+		param_grid = {'n_estimators': n_estimators, 'max_depth': max_depth}
+		forest = RandomForestClassifier()
+		grid_search = GridSearchCV(estimator = forest, param_grid = param_grid, cv = 3, n_job = -1, verbose = 0)
+
+		#pkl_file = '../data/data_pickles/'+ p_name.split('.')[0] + '_indexes.pkl'
+		#with open(pkl_file, 'rb') as load_file:
+		#	train_build_ids = pickle.load(load_file)
+		#	test_build_ids = pickle.load(load_file)
+
+		#train_data = project [ project['tr_build_id'].isin(train_build_ids)]
+		#test_data = project [ project['tr_build_id'].isin(test_build_ids)]
+		#test_result = test_data['tr_status'].tolist()
+
+		train_result = train_data['tr_status'].tolist()
 
 
-		less = 0
-		more = 0
-		yes = 0
+		best_n_estimators = []
+		best_max_depth = []
 
-		#print(X)
-		num_test = 0
-		num_feature=4
-
-		precision = []
-		recall = []
-		f1 = []
-		build_save = []
-		fitted_model = []
+		best_f1 = 0
+		best_f1_sample = 0
+		best_f1_sample_result = 0
+		best_f1_estimator = 0
+		best_thresholds = []
 
 
-		for train_index, test_index in KF.split(X):
-			X_train, X_test = X[train_index], X[test_index]
-			Y_train, Y_test = y[train_index], y[test_index]
 
-			num_test = num_test + len(Y_test)
-			X_train = X_train.reshape((int(len(X_train)), num_feature))
+		for i in range(1):
+			print('Bootstrapping {} for {}'.format(i, p_name))
+
+			while True:
+				print('Here for {} {}'.format(i, p_name))
+				sample_train = resample(train_data, replace=True, n_samples=len(train_data))
+				sample_train_result = sample_train['tr_status']
+
+				build_ids = sample_train['tr_build_id'].tolist()
+				sample_test = train_data [~train_data['tr_build_id'].isin(build_ids)] 
+				sample_test_result = sample_test['tr_status']
+				
+				if len(sample_test_result) != 0:
+					break
+
+			sample_train.drop('tr_status', inplace=True, axis=1)
+			sample_train.drop('tr_build_id', inplace=True, axis=1)
+			sample_test.drop('tr_status', inplace=True, axis=1)
+			sample_test.drop('tr_build_id', inplace=True, axis=1)
+			
+			print('Training {} for {}'.format(i, p_name))
+			grid_search.fit(sample_train, sample_train_result)
+			sample_pred_vals = grid_search.predict_proba(sample_test)
+
+			pred_vals = sample_pred_vals[:, 1]
+			fpr, tpr, t = roc_curve(sample_test_result, pred_vals)
+			gmeans = sqrt(tpr * (1-fpr))
+			ix = argmax(gmeans)
+			bt = t[ix]
+			best_thresholds.append(bt)
+
+			final_pred_result = []
+			for j in range(len(pred_vals)):
+				if pred_vals[j] > bt:
+					final_pred_result.append(1)
+				else:
+					final_pred_result.append(0)
 
 			try:
-				rf = RandomForestClassifier(class_weight={0:0.05,1:1})
-				predictor = rf.fit(X_train, Y_train)
+				f1 = f1_score(sample_test_result, final_pred_result)
 			except:
-				rf = RandomForestClassifier()
-				predictor = rf.fit(X_train, Y_train)
+				print('')
 
-			X_test = X_test.reshape((int(len(X_test)), num_feature))
-			Y_result=(predictor.predict(X_test))
+			if f1 > best_f1:
+				best_f1 = f1
+				best_f1_sample = sample_train
+				best_f1_sample_result = sample_train_result
+				best_f1_estimator = grid_search.best_estimator_
 
+			best_n_estimators.append(grid_search.best_params_['n_estimators'])
+			best_max_depth.append(grid_search.best_params_['max_depth'])
+		
+		#completed bootstrapping
+		threshold = median(best_thresholds)
+		n_estimator = median(best_n_estimators)
+		max_depth = median(best_max_depth)
 
-			'''for index in range(len(Y_result)):
-				if Y_result[index]==0 and Y_test[index]==0 and Y_test[index-1]==1 and Y_result[index-1]==1:
-					yes=yes+1
-				if Y_result[index] == 0 and Y_result[index-1]==1:
-					more=more+1
-				if Y_test[index] == 0 and Y_test[index-1]==1:
-					less=less+1
+		forest = RandomForestClassifier(n_estimators=int(n_estimator), max_depth=int(max_depth))
+		forest.fit(best_f1_sample, best_f1_sample_result)
 
-			if less != 0:
-				recall0 = yes/less
-				if more == 0:
-					precision0=1
-				else:
-					precision0 = yes / more'''
-
-			precision0 = precision_score(Y_test, Y_result)
-			recall0 = recall_score(Y_test, Y_result)
-			f10 = f1_score(Y_test, Y_result)
-
-			precision.append(precision0)
-			recall.append(recall0)
-			f1.append(f10)
-			fitted_model.append(rf)
+		#test_builds = test_data['tr_build_id'].tolist()
+		#test_data.drop('tr_build_id', inplace=True, axis=1)
+		#test_data.drop('tr_status', inplace=True, axis=1)
 
 
-		best_f1 = max(f1)
-		max_index = f1.index(best_f1)
+		string = "../data/test/" + p_name.split('.')[0] + "_test.csv"
+		test_data = get_data(string)
+		y_val = test_data['tr_status'].tolist()
+		test_data.drop('tr_status', inplace=True, axis=1)
+		test_data.drop('tr_build_id', inplace=True, axis=1)
 
-		print(f1)
-		print(best_f1)
-
-		best_fit_model = fitted_model[max_index]
-
-		string = "../data/even_data/first_failures/test/" + project.split('.')[0] + "_test.csv"
-		X_val, y_val = get_data(string)
-
-		y_pred = best_fit_model.predict(X_val)
+		y_pred = forest.predict(test_data)
 		print(y_pred)
 		print(y_val)
 
@@ -151,10 +203,10 @@ def with_cv_val():
 
 		file_name = './' + project.split('.')[0] + '_abcd_metrics.csv'
 		result_df.to_csv(file_name)
+		break
 
 
 def without_cv_val():
-	#project_names=['rails/rails', 'myronmarston/vcr', 'concerto/concerto', 'benhoskings/babushka', 'rubinius/rubinius', 'rubychan/coderay', 'codeforamerica/adopt-a-hydrant', 'radiant/radiant', 'saberma/shopqi', 'rspec/rspec-core', 'engineyard/engineyard', 'plataformatec/devise', 'rspec/rspec-rails', 'karmi/retire', 'sferik/rails_admin', 'tdiary/tdiary-core', 'dkubb/veritas', 'sstephenson/sprockets', 'thoughtbot/factory_girl', 'weppos/whois', 'errbit/errbit', 'padrino/padrino-framework', 'thoughtbot/paperclip', 'plataformatec/simple_form', 'huerlisi/bookyt', 'hotsh/rstat.us', 'mperham/dalli', 'innoq/iqvoc', 'cheezy/page-object', 'justinfrench/formtastic', 'nov/fb_graph', 'assaf/vanity', 'activerecord-hackery/ransack', 'jimweirich/rake', 'rspec/rspec-mocks', 'neo4jrb/neo4j', 'diaspora/diaspora', 'test-unit/test-unit', 'Shopify/liquid', 'activeadmin/activeadmin', 'ari/jobsworth', 'thoughtbot/shoulda-matchers', 'rubygems/rubygems', 'rdoc/rdoc', 'spree/spree', 'rubyzip/rubyzip', 'pry/pry', 'jruby/activerecord-jdbc-adapter', 'sass/sass', 'jruby/warbler', 'fatfreecrm/fat_free_crm', 'rspec/rspec-expectations', 'excon/excon', 'typus/typus', 'heroku/heroku', 'nahi/httpclient', 'podio/podio-rb', 'maxdemarzi/neography', 'locomotivecms/engine', 'gedankenstuecke/snpr', 'peter-murach/github', 'jnicklas/capybara', 'travis-ci/travis-core', 'presidentbeef/brakeman', 'mikel/mail', 'randym/axlsx', 'kmuto/review', 'danielweinmann/catarse', 'middleman/middleman', 'rubyworks/facets', 'railsbp/rails_best_practices', 'comfy/comfortable-mexican-sofa', 'mongoid/moped', 'wr0ngway/rubber', 'rslifka/elasticity', 'lsegal/yard', 'NoamB/sorcery', 'puppetlabs/puppet', 'mitchellh/vagrant', 'ai/r18n', 'celluloid/celluloid', 'jordansissel/fpm', 'neo4jrb/neo4j-core', 'orbeon/orbeon-forms', 'redis/redis-rb', 'pivotal/pivotal_workstation', 'jruby/jruby', 'louismullie/treat', 'puma/puma', 'pophealth/popHealth', 'twitter/twitter-cldr-rb', 'gistflow/gistflow', 'adamfisk/LittleProxy', 'awestruct/awestruct', 'jnunemaker/httparty', 'Graylog2/graylog2-server', 'neuland/jade4j', 'sensu/sensu', 'shawn42/gamebox', 'applicationsonline/librarian', 'haml/haml', 'sporkmonger/addressable', 'google/google-api-ruby-client', 'elm-city-craftworks/practicing-ruby-web', 'sunlightlabs/scout', 'floere/phony', 'data-axle/cassandra_object', 'typhoeus/typhoeus', 'shoes/shoes4', 'troessner/reek', 'recurly/recurly-client-ruby', 'CloudifySource/cloudify', 'puppetlabs/puppetlabs-firewall', 'typhoeus/ethon', 'sparklemotion/nokogiri', 'tinkerpop/blueprints', 'tinkerpop/rexster', 'thinkaurelius/titan', 'openSUSE/open-build-service', 'engineyard/ey-cloud-recipes', 'git/git-scm.com', 'honeybadger-io/honeybadger-ruby', 'azagniotov/stubby4j', 'sferik/twitter', 'calagator/calagator', 'openshift/rhc', 'codefirst/AsakusaSatellite', 'DatabaseCleaner/database_cleaner', 'burke/zeus', 'fog/fog', 'twilio/twilio-java', 'twitter/commons', 'Albacore/albacore', 'prawnpdf/prawn', 'enspiral/loomio', 'refinery/refinerycms', 'sevntu-checkstyle/sevntu.checkstyle', 'opal/opal', 'graphhopper/graphhopper', 'sparklemotion/mechanize', 'SomMeri/less4j', 'tent/tentd', 'searchbox-io/Jest', 'square/dagger', 'google/truth', 'square/okhttp', 'square/retrofit', 'maxcom/lorsource', 'jneen/rouge', 'jmkgreen/morphia', 'SpontaneousCMS/spontaneous', 'everzet/capifony', 'killbill/killbill', 'scobal/seyren', 'intuit/simple_deploy', 'projectblacklight/blacklight', 'rapid7/metasploit-framework', 'amahi/platform', 'vcr/vcr', 'Findwise/Hydra', 'structr/structr', 'sachin-handiekar/jInstagram', 'nutzam/nutz', 'slim-template/slim', 'puppetlabs/puppetlabs-stdlib', 'puppetlabs/facter', 'phoet/on_ruby', 'dreamhead/moco', 'travis-ci/travis.rb', 'cloudfoundry/cloud_controller_ng', 'square/assertj-android', 'jmxtrans/jmxtrans', 'twitter/secureheaders', 'nanoc/nanoc', 'expertiza/expertiza', 'asciidoctor/asciidoctor', 'rubber/rubber', 'openMF/mifosx', 'mybatis/mybatis-3', 'test-kitchen/test-kitchen', 'owlcs/owlapi', 'engineyard/engineyard-serverside', 'selendroid/selendroid', 'ruboto/ruboto', 'openfoodfoundation/openfoodnetwork', 'stephanenicolas/robospice', 'joscha/play-authenticate', 'undera/jmeter-plugins', 'cantino/huginn', 'resque/resque', 'albertlatacz/java-repl', 'l0rdn1kk0n/wicket-bootstrap', 'dynjs/dynjs', 'abarisain/dmix', 'dropwizard/dropwizard', 'dropwizard/metrics', 'jberkel/sms-backup-plus', 'rubymotion/sugarcube', 'naver/yobi', 'Shopify/active_shipping', 'projecthydra/sufia', 'rubymotion/BubbleWrap', 'pivotal-sprout/sprout-osx-apps', 'chef/omnibus', 'JodaOrg/joda-time', 'EmmanuelOga/ffaker', 'kostya/eye', 'laurentpetit/ccw', 'puniverse/quasar', 'simpligility/android-maven-plugin', 'jsonld-java/jsonld-java', 'travis-ci/travis-cookbooks', 'FenixEdu/fenixedu-academic', 'threerings/playn', 'restlet/restlet-framework-java', 'jedi4ever/veewee', 'sensu/sensu-community-plugins', 'OpenRefine/OpenRefine', 'chef/chef', 'fluent/fluentd', 'perwendel/spark', 'joelittlejohn/jsonschema2pojo', 'jOOQ/jOOQ', 'springside/springside4', 'github/hub', 'johncarl81/parceler', 'discourse/onebox', 'julianhyde/optiq', 'ruby-ldap/ruby-net-ldap', 'DSpace/DSpace', 'jeremyevans/sequel', 'bikeindex/bike_index', 'doanduyhai/Achilles', 'rackerlabs/blueflood', 'rodjek/librarian-puppet', 'p6spy/p6spy', 'square/wire', 'Nodeclipse/nodeclipse-1', 'rebelidealist/stripe-ruby-mock', 'checkstyle/checkstyle', 'elastic/logstash', 'airlift/airlift', 'lenskit/lenskit', 'MiniProfiler/rack-mini-profiler', 'geoserver/geoserver', 'ocpsoft/rewrite', 'Unidata/thredds', 'torakiki/pdfsam', 'loopj/android-async-http', 'feedbin/feedbin', 'recruit-tech/redpen', 'brettwooldridge/HikariCP', 'puppetlabs/marionette-collective', 'iipc/openwayback', 'caelum/vraptor4', 'dianping/cat', 'jphp-compiler/jphp', 'mockito/mockito', 'oblac/jodd', 'facebook/buck', 'facebook/presto', 'jpos/jPOS', 'hamstergem/hamster', 'mongodb/morphia', 'realestate-com-au/pact', 'inaturalist/inaturalist', 'jtwig/jtwig', 'go-lang-plugin-org/go-lang-idea-plugin', 'square/picasso', 'voltrb/volt', 'zxing/zxing', 'openaustralia/morph', 'GlowstoneMC/Glowstone', 'owncloud/android', 'JakeWharton/u2020', 'rpush/rpush', 'OneBusAway/onebusaway-android', 'rabbit-shocker/rabbit', 'azkaban/azkaban', 'relayrides/pushy', 'deeplearning4j/deeplearning4j', 'github/developer.github.com', 'xetorthio/jedis', 'FasterXML/jackson-core', 'FasterXML/jackson-databind', 'protostuff/protostuff', 'atmos/heaven', 'MrTJP/ProjectRed', 'lemire/RoaringBitmap', 'apache/drill', 'Kapeli/cheatsheets', 'gradle/gradle', 'OpenGrok/OpenGrok', 'spring-io/sagan', 'mendhak/gpslogger', 'thoughtbot/hound', 'teamed/qulice', 'jcabi/jcabi-aspects', 'jcabi/jcabi-github', 'jcabi/jcabi-http', 'yegor256/rultor', 'querydsl/querydsl', 'codevise/pageflow', 'grails/grails-core', 'weld/core', 'thatJavaNerd/JRAW', 'bndtools/bnd', 'igniterealtime/Openfire', 'zendesk/samson', 'bndtools/bndtools', 'xtreemfs/xtreemfs', 'puniverse/capsule', 'broadinstitute/picard', 'github/github-services', 'gavinlaking/vedeu', 'haiwen/seadroid', 'AChep/AcDisplay', 'GoClipse/goclipse', 'hsz/idea-gitignore', 'jsprit/jsprit', 'dblock/waffle', 'numenta/htm.java', 'rightscale/praxis', 'google/error-prone', 'datastax/ruby-driver', 'iluwatar/java-design-patterns', 'Netflix/Hystrix', 'oyachai/HearthSim', 'jayway/JsonPath', 'exteso/alf.io', 'spring-cloud/spring-cloud-config', 'validator/validator', 'HubSpot/jinjava', 'connectbot/connectbot', 'google/physical-web', 'myui/hivemall', 'MarkUsProject/Markus', 'jMonkeyEngine/jmonkeyengine', 'davidmoten/rxjava-jdbc', 'qos-ch/logback', 'Homebrew/homebrew-science', 'GoogleCloudPlatform/DataflowJavaSDK', 'SoftInstigate/restheart', 'naver/pinpoint', 'KronicDeth/intellij-elixir', 'embulk/embulk', 'loomio/loomio', 'openstreetmap/openstreetmap-website', 'activescaffold/active_scaffold', 'tananaev/traccar', 'SonarSource/sonarqube', 'grpc/grpc-java', 'psi-probe/psi-probe', 'orientation/orientation', 'square/keywhiz', 'aws/aws-sdk-java', 'Shopify/shipit-engine', 'perfectsense/brightspot-cms', 'jamesagnew/hapi-fhir']
 
 	project_names=['rails.csv', 'jruby.csv', 'metasploit-framework.csv', 'heroku.csv', 'vagrant.csv', 'opal.csv', 'cloudify.csv', 'cloud_controller_ng.csv', 'rubinius.csv', 'open-build-service.csv', 'gradle.csv', 'sonarqube.csv', 'loomio.csv', 'fog.csv', 'puppet.csv', 'concerto.csv', 'sufia.csv', 'geoserver.csv', 'orbeon-forms.csv', 'graylog2-server.csv']
 	
@@ -252,7 +304,7 @@ def without_cv_val():
 		result_df.to_csv(file_name)
 
 
-#with_cv_val()
+with_cv_val()
 
 
 
@@ -460,4 +512,4 @@ def validation():
 			# #print('Total time taken for builds:')
 			# #print(built_commits)
 
-validation()
+#validation()
