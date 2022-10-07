@@ -33,7 +33,7 @@ warnings.filterwarnings("ignore")
 # In[39]:
 
 
-project_list = ['graylog2-server.csv', 'rails.csv', 'jruby.csv', 'metasploit-framework.csv', 'heroku.csv', 'vagrant.csv', 'opal.csv', 'cloudify.csv', 'cloud_controller_ng.csv', 'rubinius.csv', 'open-build-service.csv', 'gradle.csv', 'sonarqube.csv', 'loomio.csv', 'fog.csv', 'puppet.csv', 'concerto.csv', 'sufia.csv', 'geoserver.csv', 'orbeon-forms.csv']
+project_list = ['graylog2-server.csv', 'rails.csv', 'jruby.csv', 'metasploit-framework.csv', 'vagrant.csv', 'opal.csv', 'cloudify.csv', 'cloud_controller_ng.csv', 'rubinius.csv', 'open-build-service.csv', 'gradle.csv', 'sonarqube.csv', 'loomio.csv', 'fog.csv', 'puppet.csv', 'concerto.csv', 'sufia.csv', 'geoserver.csv', 'orbeon-forms.csv']
 
 # In[40]:
 
@@ -104,6 +104,7 @@ def get_complete_data(p_name):
     #open the metrics file
     filename = 'project_metrics/' + p_name.split('.')[0] + '_metrics.csv'
     project = pd.read_csv(filename)
+    project = project.drop(project.columns[9], axis=1)
     project['tr_status'] = output_values(project['tr_status'])
     return project
 
@@ -283,8 +284,8 @@ def bootstrapping(p_name):
     best_thresholds = []
 
         
-    #bootstrap 50 times
-    for i in range(50):
+    #bootstrap 100 times
+    for i in range(100):
         print('Bootstrapping {} for {}'.format(i, p_name))
 
         #Ensuring we get a non-zero training or testing sample
@@ -350,7 +351,7 @@ def bootstrapping(p_name):
     forest = RandomForestClassifier(n_estimators=int(n_estimator), max_depth=int(max_depth))
     forest.fit(best_f1_sample, best_f1_sample_result)
 
-    file_name = 'dump_data/rq2_' + p_name + '_best_model.pkl'
+    file_name = 'dump_data/rq3_' + p_name + '_best_model.pkl'
     dump_file = open(file_name, 'wb')
     pickle.dump(forest, dump_file)
     pickle.dump(threshold, dump_file)
@@ -363,8 +364,8 @@ def bootstrapping(p_name):
     test_data.drop('tr_build_id', inplace=True, axis=1)
     test_data.drop('tr_status', inplace=True, axis=1)
 
-    batchsizelist = [1, 2, 4, 6, 8, 16, 32]
-    algorithms = ['NOBATCH', 'BATCH4', 'BATCHSTOP4', 'BATCHBISECT']
+    batchsizelist = [2, 4, 8, 16]
+    algorithms = ['BATCH4', 'BATCHSTOP4', 'BATCHBISECT']
 
     batch_delays = 0
     
@@ -579,7 +580,7 @@ def bootstrapping(p_name):
 # In[53]:
 
 jobs = []
-for p_name in project_list[:5]:
+for p_name in project_list[4:]:
     
     q = multiprocess.Process(target=bootstrapping, args=(p_name,))
     jobs.append(q)
@@ -703,7 +704,7 @@ def normal_train_test(p_name):
     test_data.drop('tr_status', inplace=True, axis=1)
 
 
-    batchsizelist = [1, 2, 4, 8, 16, 32]
+    batchsizelist = [2, 4, 8, 16]
     algorithms = ['BATCH4', 'BATCHSTOP4', 'BATCHBISECT']
     
     for alg in algorithms:
