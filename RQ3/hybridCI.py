@@ -114,7 +114,7 @@ def get_complete_data(p_name):
 
 def get_required_data(p_name, build_ids):
     
-    res_file = '../data/datasets/all_datasets/' + p_name
+    res_file = '../data/test_data/' + p_name.split('.')[0] + '_test.csv'
     res_project = pd.read_csv(res_file, usecols = ['tr_build_id', 'tr_duration'])
     durations = res_project[res_project['tr_build_id'].isin(build_ids)]['tr_duration'].tolist()
     return durations
@@ -260,7 +260,7 @@ def bootstrapping(p_name):
     forest = RandomForestClassifier()
     grid_search = GridSearchCV(estimator = forest, param_grid = param_grid, cv = 3, n_jobs = -1, verbose = 0)
     
-    pkl_file = '../data/even_data/first_failures/data_pickles/' + p_name.split('.')[0] + '_indexes.pkl'
+    pkl_file = '../data/data_pickles/' + p_name.split('.')[0] + '_indexes.pkl'
     with open(pkl_file, 'rb') as load_file:
         train_build_ids = pickle.load(load_file)
         test_build_ids = pickle.load(load_file)
@@ -285,7 +285,7 @@ def bootstrapping(p_name):
 
         
     #bootstrap 100 times
-    for i in range(100):
+    for i in range(1):
         print('Bootstrapping {} for {}'.format(i, p_name))
 
         #Ensuring we get a non-zero training or testing sample
@@ -451,8 +451,11 @@ def bootstrapping(p_name):
                                     batch_build_times = durations[i:i+4]
                                     actual_batch_results = test_result[i:i+4]
                                     
-                                    num_of_builds += 1
+                                    num_of_builds += 1                                    
                                     build_duration += max(batch_build_times)
+                                        # print(batch_build_times)
+                                        # print(durations)
+                                        # print(test_result)
 
                                     #if any build has failed in the batch, then whole batch will fail
                                     if 0 in actual_batch_results:
@@ -580,7 +583,7 @@ def bootstrapping(p_name):
 # In[53]:
 
 jobs = []
-for p_name in project_list[4:]:
+for p_name in project_list:
     
     q = multiprocess.Process(target=bootstrapping, args=(p_name,))
     jobs.append(q)
