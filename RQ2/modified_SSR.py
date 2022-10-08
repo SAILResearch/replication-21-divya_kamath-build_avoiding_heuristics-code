@@ -29,7 +29,7 @@ import multiprocess
 
 
 MAX_BATCH = [2, 4, 8, 16]
-algorithm = ['BATCHSTOP4']
+algorithm = ['BATCH4', 'BATCHBISECT', 'BATCHSTOP4']
 
 
 # In[18]:
@@ -43,7 +43,7 @@ confidence = list(range(2,21,1))
 # In[19]:
 
 
-result_file = open('19_9_batchstop4.csv', 'w')
+result_file = open('ssr_algorithms.csv', 'w')
 result_headers = ['project', 'algorithm', 'batch_size', 'confidence', 'project_reqd_builds', 'project_missed_builds', 'project_build_duration', 'project_saved_builds', 'project_delays', 'testall_size', 'batch_delays']
 writer = csv.writer(result_file)
 writer.writerow(result_headers)
@@ -248,6 +248,13 @@ def sbs(project):
     #retrain to get the best model
     forest = RandomForestClassifier(n_estimators=int(n_estimator), max_depth=int(max_depth))
     forest.fit(best_f1_sample, best_f1_sample_result)
+
+    file_name = 'dump_data/rq2_' + p_name + '_best_model.pkl'
+    dump_file = open(file_name, 'wb')
+    pickle.dump(forest, dump_file)
+    pickle.dump(threshold, dump_file)
+    pickle.dump(n_estimator, dump_file)
+    pickle.dump(max_depth, dump_file)
                 
     #predictor = rf.fit(X_train, Y_train)
     return forest, threshold
