@@ -1,0 +1,6 @@
+Training period in opal = 300 
+Average Time Reqd in opal = 1.1748933306956175 
+Average Builds Reqd in opal = 0.8488160291438981 
+Average Total Delay in opal = 60.666666666666664 
+Average Failed Identified in opal = 0.0 
+Average Failed Unidentified in opal = 66.66666666666667Total Train & Test lengths = 1560, 327

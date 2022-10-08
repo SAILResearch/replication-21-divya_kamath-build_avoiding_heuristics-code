@@ -285,7 +285,7 @@ def bootstrapping(p_name):
 
         
     #bootstrap 100 times
-    for i in range(1):
+    for i in range(100):
         print('Bootstrapping {} for {}'.format(i, p_name))
 
         #Ensuring we get a non-zero training or testing sample
@@ -582,15 +582,21 @@ def bootstrapping(p_name):
 
 # In[53]:
 
-jobs = []
-for p_name in project_list:
+#jobs = []
+#for p_name in project_list[9:]:
     
-    q = multiprocess.Process(target=bootstrapping, args=(p_name,))
-    jobs.append(q)
-    q.start()
+#    q = multiprocess.Process(target=bootstrapping, args=(p_name,))
+#    jobs.append(q)
+#    q.start()
 
-for j in jobs:
-    j.join()
+#for j in jobs:
+#    j.join()
+
+
+if __name__ == '__main__':
+	with multiprocess.Pool(5) as p:
+		p.map(bootstrapping, project_list[:9])
+
 
 
 # In[12]:

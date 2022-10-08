@@ -1,0 +1,5 @@
+Average Time Reqd in cloud_controller_ng = 2.598325506654452 
+Average Builds Reqd in cloud_controller_ng = 2.380952380952381 
+Average Total Delay in cloud_controller_ng = 271.0 
+Average Failed Identified in cloud_controller_ng = 10.0 
+Average Failed Unidentified in cloud_controller_ng = 90.0Total Train & Test lengths = 2155, 206

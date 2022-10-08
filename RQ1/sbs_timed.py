@@ -25,8 +25,8 @@ import pickle
 import csv
 import warnings
 import datetime
-import multiprocess
-from multiprocess import Pool
+import multiprocessing
+from multiprocessing import Pool
 warnings.filterwarnings("ignore")
 
 
@@ -97,7 +97,7 @@ def get_pass_streak(y_project):
 def get_complete_data(p_name):
     
     #open the metrics file
-    filename = '../data/datasets/' + p_name + '.csv'
+    filename = '../data_distributions/data/' + p_name + '.csv'
     project = pd.read_csv(filename, usecols=['tr_build_id', 'git_diff_src_churn', 'git_diff_test_churn', 'gh_diff_files_modified', 'gh_team_size', 'gh_build_started_at', 'tr_status'])
     project['gh_build_started_at'] =  pd.to_datetime(project['gh_build_started_at'], format='%Y-%m-%d %H:%M:%S')
     project['tr_status'] = output_values(project['tr_status'])
@@ -121,7 +121,7 @@ def get_start_end_date(project):
 
 def get_required_data(p_name, build_ids):
     
-    res_file = '../data/' + p_name + '.csv'
+    res_file = '../data_distributions/data/' + p_name + '.csv'
     res_project = pd.read_csv(res_file, usecols = ['tr_build_id', 'tr_duration'])
     durations = res_project[res_project['tr_build_id'].isin(build_ids)]['tr_duration'].tolist()
     return durations
@@ -270,11 +270,18 @@ def hybrid_performance(p_name, test_builds, test_result, ci):
         if test_result[i] == 0:
             if ci[i] != 0:
                 delay_indexes.append(i)
-                
-    num_of_failure_unidentified = len(delay_indexes)
-    identified_failures = test_result.count(0) - num_of_failure_unidentified
-    failures_found = 100*identified_failures/test_result.count(0)
     
+    total_failures = test_result.count(0)            
+    num_of_failure_unidentified = len(delay_indexes)
+    identified_failures = total_failures - num_of_failure_unidentified
+    failures_found = 100*identified_failures/total_failures
+    
+    if total_failures != 0:
+        failures_found = 100*identified_failures/total_failures
+        failures_not_found = 100*num_of_failure_unidentified/total_failures
+    else:
+        failures_found = 0
+        failures_not_found = 0
 #     print(delay_indexes)
 #     print(built_indexes)
     from_value = 0
@@ -299,7 +306,7 @@ def hybrid_performance(p_name, test_builds, test_result, ci):
 #     print('Total % of failures unidentified for {} = {}'.format(p_name, 100*num_of_failure_unidentified/test_result.count(0)))
 #     print("===========================================")
     
-    return (time_reqd, builds_reqd, sum(delay), failures_found, 100*num_of_failure_unidentified/test_result.count(0))
+    return (time_reqd, builds_reqd, sum(delay), failures_found, failures_not_found)
 
 
 # In[20]:
@@ -331,8 +338,8 @@ def bootstrapping(p_name):
     while start_date < end_date:
         
         #setting the training and testing period in terms of num of days
-        train_period = 300
-        test_period = 30
+        train_period = 400
+        test_period = 60
         
         '''
         Getting a good number of training and testing data
@@ -356,7 +363,7 @@ def bootstrapping(p_name):
             train_result = train_data['tr_status'].tolist()
             test_result = test_data['tr_status'].tolist()
             
-            if len(train_result) > 100 and len(test_result) > 10 :
+            if len(train_result) > 300 and len(test_result) > 30 :
                 break
             
             if test_end > end_date:
@@ -372,10 +379,10 @@ def bootstrapping(p_name):
                     test_result = test_data['tr_status'].tolist()
                 break
                 
-            if len(train_result) <= 100:
+            if len(train_result) <= 300:
                 train_period += 20
             
-            if len(test_result) <= 10:
+            if len(test_result) <= 30:
                 test_period += 20
                 
         #Now we have gotten atleast minimum number of training and testing data    
@@ -401,14 +408,12 @@ def bootstrapping(p_name):
 
         
         #bootstrap 10 times
-        for i in range(100):
+        for i in range(1):
             print('Bootstrapping {} for {}'.format(i, p_name))
             
-            file_name = 'dump_data/rq1_sbs_' + p_name + '_' + str(phase) + '_model_' + str(i+1) + '_model.pkl'
             
             #Ensuring we get a non-zero training or testing sample
             while True:
-                print('Here for {} {}'.format(i, p_name))
                 sample_train = resample(train_data, replace=True, n_samples=len(train_data))
                 sample_train_result = sample_train['tr_status']
 
@@ -518,12 +523,18 @@ def bootstrapping(p_name):
         start_date = test_end
         phase += 1
     
-    
-    print("Average Time Reqd in {} = {}".format(p_name, sum(performances['time_reqd'])/len(performances['time_reqd'])))
-    print("Average Builds Reqd in {} = {}".format(p_name, sum(performances['builds_reqd'])/len(performances['builds_reqd'])))
-    print("Average Total Delay in {} = {}".format(p_name, sum(performances['total_delay'])/len(performances['total_delay'])))
-    print("Average Failed Identified in {} = {}".format(p_name, sum(performances['failures_found'])/len(performances['failures_found'])))
-    print("Average Failed Unidentified in {} = {}".format(p_name, sum(performances['failures_not_found'])/len(performances['failures_not_found'])))
+    result_file = p_name + '_result.txt'
+    with open(result_file) as fres: 
+        fres.write("Average Time Reqd in {} = {}".format(p_name, sum(performances['time_reqd'])/len(performances['time_reqd'])))
+        fres.write("Average Builds Reqd in {} = {}".format(p_name, sum(performances['builds_reqd'])/len(performances['builds_reqd'])))
+        fres.write("Average Total Delay in {} = {}".format(p_name, sum(performances['total_delay'])/len(performances['total_delay'])))
+        fres.write("Average Failed Identified in {} = {}".format(p_name, sum(performances['failures_found'])/len(performances['failures_found'])))
+        fres.write("Average Failed Unidentified in {} = {}".format(p_name, sum(performances['failures_not_found'])/len(performances['failures_not_found'])))        
+        print("Average Time Reqd in {} = {}".format(p_name, sum(performances['time_reqd'])/len(performances['time_reqd'])))
+        print("Average Builds Reqd in {} = {}".format(p_name, sum(performances['builds_reqd'])/len(performances['builds_reqd'])))
+        print("Average Total Delay in {} = {}".format(p_name, sum(performances['total_delay'])/len(performances['total_delay'])))
+        print("Average Failed Identified in {} = {}".format(p_name, sum(performances['failures_found'])/len(performances['failures_found'])))
+        print("Average Failed Unidentified in {} = {}".format(p_name, sum(performances['failures_not_found'])/len(performances['failures_not_found'])))
 
     print('\n\n\n\n\n')
 
@@ -542,22 +553,14 @@ def bootstrapping(p_name):
 #     j.join()
 
 
-# In[ ]:
-
-
-
 
 
 # In[114]:
 
 
+def main():
+    with Pool(9) as pool:
+        pool.map(bootstrapping, project_list)
 
-with Pool(9) as pool:
-    pool.map(bootstrapping, project_list)
-
-
-# In[ ]:
-
-
-
-
+if __name__ == '__main__':
+    main()

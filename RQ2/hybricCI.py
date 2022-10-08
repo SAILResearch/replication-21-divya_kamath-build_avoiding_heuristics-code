@@ -25,14 +25,14 @@ import pickle
 import csv
 import warnings
 import datetime
-import multiprocess
+import multiprocessing
 warnings.filterwarnings("ignore")
 
 
 # In[94]:
 
 
-project_list = ['geoserver', 'gradle', 'cloud_controller_ng', 'opal', 'jruby', 'cloudify', 'chef', 'orbeon-forms', 'vagrant']
+project_list = ['cloud_controller_ng', 'jruby', 'chef', 'orbeon-forms']
 
 
 # In[95]:
@@ -107,7 +107,7 @@ def get_complete_data(p_name):
     
     build_ids = project['tr_build_id'].tolist()
     #get results data
-    res_file = '../data/' + p_name + '.csv'
+    res_file = '../data_distributions/data/' + p_name + '.csv'
     res_project = pd.read_csv(res_file, usecols = ['tr_build_id', 'gh_build_started_at', 'tr_status'])
     res_project['gh_build_started_at'] =  pd.to_datetime(res_project['gh_build_started_at'], format='%Y-%m-%d %H:%M:%S')
     y_project = res_project[res_project['tr_build_id'].isin(build_ids)]['tr_status'].tolist()
@@ -140,7 +140,7 @@ def get_start_end_date(project):
 
 def get_required_data(p_name, build_ids):
     
-    res_file = '../data/' + p_name + '.csv'
+    res_file = '../data_distributions/data/' + p_name + '.csv'
     res_project = pd.read_csv(res_file, usecols = ['tr_build_id', 'tr_duration'])
     durations = res_project[res_project['tr_build_id'].isin(build_ids)]['tr_duration'].tolist()
     return durations
@@ -292,7 +292,13 @@ def hybrid_performance(p_name, test_builds, test_result, ci):
                 
     num_of_failure_unidentified = len(delay_indexes)
     identified_failures = test_result.count(0) - num_of_failure_unidentified
-    failures_found = 100*identified_failures/test_result.count(0)
+    total_failures = test_result.count(0)
+    if total_failures != 0:
+        failures_found = 100*identified_failures/total_failures
+        failures_not_found = 100*num_of_failures_unidentified/total_failures
+    else:
+        failures_found = 0
+        failures_not_found = 0
     
 #     print(delay_indexes)
 #     print(built_indexes)
@@ -309,16 +315,8 @@ def hybrid_performance(p_name, test_builds, test_result, ci):
         for j in range(len(delay_indexes)):
             delay.append(final_index - delay_indexes[j])
     
-#     print("===========================================")
-#     print('Total Number of builds for {} = {}'.format(p_name, total_builds))
-#     print('Total % of builds required for {} = {}'.format(p_name, builds_reqd))
-#     print('Total % of time required for {} = {}'.format(p_name, time_reqd))
-#     print('Total delays made for {} = {}'.format(p_name, sum(delay)))
-#     print('Total % of failures identified for {} = {}'.format(p_name, failures_found))
-#     print('Total % of failures unidentified for {} = {}'.format(p_name, 100*num_of_failure_unidentified/test_result.count(0)))
-#     print("===========================================")
-    
-    return (time_reqd, builds_reqd, sum(delay), failures_found, 100*num_of_failure_unidentified/test_result.count(0))
+    print('Computed the performance')
+    return (time_reqd, builds_reqd, sum(delay), failures_found, failures_not_found)
 
 
 # In[108]:
@@ -350,7 +348,7 @@ def bootstrapping(p_name):
     while start_date < end_date:
         
         #setting the training and testing period in terms of num of days
-        train_period = 300
+        train_period = 400
         test_period = 30
         
         '''
@@ -363,6 +361,7 @@ def bootstrapping(p_name):
         '''
         
         while True:
+            print('Calculating best training size for {}'.format(p_name))
             train_end = start_date + datetime.timedelta(days = train_period + 1)
             test_start = start_date + datetime.timedelta(days = train_period)
             test_end = test_start + datetime.timedelta(days = test_period)
@@ -375,7 +374,7 @@ def bootstrapping(p_name):
             train_result = train_data['tr_status'].tolist()
             test_result = test_data['tr_status'].tolist()
             
-            if len(train_result) > 100 and len(test_result) > 10 :
+            if len(train_result) > 300 and len(test_result) > 30 :
                 break
             
             if test_end > end_date:
@@ -391,18 +390,18 @@ def bootstrapping(p_name):
                     test_result = test_data['tr_status'].tolist()
                 break
                 
-            if len(train_result) <= 100:
+            if len(train_result) <= 300:
                 train_period += 20
             
-            if len(test_result) <= 10:
+            if len(test_result) <= 30:
                 test_period += 20
                 
         #Now we have gotten atleast minimum number of training and testing data    
         print('The training period = {} to {}'.format(start_date, train_end))
         print('The testing period = {} to {}'.format(test_start, test_end))
         
-#         print('Training size = {}'.format(len(train_result)))
-#         print('Testing size = {}'.format(len(test_result)))
+        print('Training size = {}'.format(len(train_result)))
+        print('Testing size = {}'.format(len(test_result)))
         
         #dropping build start time column
         train_data.drop('gh_build_started_at', inplace=True, axis=1)
@@ -422,14 +421,12 @@ def bootstrapping(p_name):
 
         
         #bootstrap 10 times
-        for i in range(50):
+        for i in range(1):
             print('Bootstrapping {} for {}'.format(i, p_name))
             
-            file_name = 'dump_data/rq2_' + p_name + '_' + str(phase) + '_model_' + str(i+1) + '_model.pkl'
             
             #Ensuring we get a non-zero training or testing sample
             while True:
-                print('Here for {} {}'.format(i, p_name))
                 sample_train = resample(train_data, replace=True, n_samples=len(train_data))
                 sample_train_result = sample_train['tr_status']
 
@@ -485,6 +482,7 @@ def bootstrapping(p_name):
 #             print(precision, recall, accuracy, f1, auc_score)
             best_n_estimators.append(grid_search.best_params_['n_estimators'])
             best_max_depth.append(grid_search.best_params_['max_depth'])
+            print('Completed a round for {}'.format(p_name))
         
         #completed with bootstrapping 
         threshold = median(best_thresholds)
@@ -578,6 +576,12 @@ def bootstrapping(p_name):
         start_date = test_end
         phase += 1
     
+    with open(res_file, 'w') as fres:
+        fres.write("Average Time Reqd in {} = {}".format(p_name, sum(performances['time_reqd'])/len(performances['time_reqd'])))
+        fres.write("Average Builds Reqd in {} = {}".format(p_name, sum(performances['builds_reqd'])/len(performances['builds_reqd'])))
+        fres.write("Average Total Delay in {} = {}".format(p_name, sum(performances['total_delay'])/len(performances['total_delay'])))
+        fres.write("Average Failed Identified in {} = {}".format(p_name, sum(performances['failures_found'])/len(performances['failures_found'])))
+        fres.write("Average Failed Unidentified in {} = {}".format(p_name, sum(performances['failures_not_found'])/len(performances['failures_not_found'])))
     
     print("Average Time Reqd in {} = {}".format(p_name, sum(performances['time_reqd'])/len(performances['time_reqd'])))
     print("Average Builds Reqd in {} = {}".format(p_name, sum(performances['builds_reqd'])/len(performances['builds_reqd'])))
@@ -590,35 +594,22 @@ def bootstrapping(p_name):
 
 # In[111]:
 
-
-for p_name in project_list:
-    bootstrapping(p_name)
-
-
+# In[113]:
 # In[ ]:
 
-
-jobs = []
+'''jobs = []
 for p_name in project_list:
     
-    q = multiprocess.Process(target=bootstrapping, args=(p_name,))
+    q = multiprocessing.Process(target=bootstrapping, args=(p_name,))
     jobs.append(q)
     q.start()
 
 for j in jobs:
-    j.join()
+    j.terminate()
+    j.join()'''
 
-
-# In[113]:
-
-
-p_name
-
-
-# In[ ]:
-
-
-from multiprocess import Pool
+print('Starting pooling')
+from multiprocessing import Pool
 
 with Pool(9) as pool:
     pool.map(bootstrapping, project_list)
