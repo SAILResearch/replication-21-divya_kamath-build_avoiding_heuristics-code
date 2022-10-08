@@ -285,7 +285,7 @@ def bootstrapping(p_name):
 
         
     #bootstrap 100 times
-    for i in range(100):
+    for i in range(1):
         print('Bootstrapping {} for {}'.format(i, p_name))
 
         #Ensuring we get a non-zero training or testing sample
@@ -351,7 +351,7 @@ def bootstrapping(p_name):
     forest = RandomForestClassifier(n_estimators=int(n_estimator), max_depth=int(max_depth))
     forest.fit(best_f1_sample, best_f1_sample_result)
 
-    file_name = 'dump_data/rq3_' + p_name + '_best_model.pkl'
+    file_name = 'rq3_' + p_name + '_best_model.pkl'
     dump_file = open(file_name, 'wb')
     pickle.dump(forest, dump_file)
     pickle.dump(threshold, dump_file)
@@ -390,6 +390,7 @@ def bootstrapping(p_name):
                     data = test_data.iloc[i]
                     data['num_of_passes'] = pass_streak
                     predict = grid_search.predict_proba([data])
+                    print(data)
 
                     if predict[0][1] > threshold:
                         final_pred_result.append(1)
@@ -428,6 +429,7 @@ def bootstrapping(p_name):
                             data = test_data.iloc[i]
                             data['num_of_passes'] = pass_streak
                             predict = grid_search.predict_proba([data])
+                            print(data)
 
                             #predicted that build has passed
                             if predict[0][1] > threshold:
@@ -595,7 +597,7 @@ def bootstrapping(p_name):
 
 if __name__ == '__main__':
 	with multiprocess.Pool(5) as p:
-		p.map(bootstrapping, project_list[:9])
+		p.map(bootstrapping, project_list[8:9])
 
 
 
