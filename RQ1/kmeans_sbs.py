@@ -13,7 +13,7 @@ from sklearn.metrics import precision_recall_curve
 from sklearn.metrics import f1_score
 from sklearn.metrics import recall_score
 from sklearn.metrics import precision_score
-from sklearn.model_selection import KFold
+from sklearn.model_selection import RepeatedKFold
 from matplotlib import pyplot
 from statistics import median
 import pickle
@@ -95,7 +95,7 @@ def get_duration_data(project_path):
 def with_cv_val(p_name):
 		
 	string = "../data/train_data/" + p_name.split('.')[0] + "_train.csv"
-	train_data = get_data(string)
+	X = get_data(string)
 
 	n_estimators = [int(x) for x in np.linspace(start=200, stop=2000, num=10)]
 	max_depth = [int(x) for x in np.linspace(10, 110, num=5)]
@@ -113,84 +113,49 @@ def with_cv_val(p_name):
 	#test_data = project [ project['tr_build_id'].isin(test_build_ids)]
 	#test_result = test_data['tr_status'].tolist()
 
-	train_result = train_data['tr_status'].tolist()
+	y = np.array(X['tr_status'].tolist())
+	X.drop('tr_status', inplace=True, axis=1)
+	X.drop('tr_build_id', inplace=True, axis=1)
+	X = X.to_numpy()
 
+	precision = []
+	recall = []
+	f1 = []
+	build_reqd = []
+	fitted_model = []
 
-	'''best_n_estimators = []
-	best_max_depth = []
+	KF = RepeatedKFold(n_splits = 10, n_repeats = 10, random_state = 2763764924)
+	num_test = 0
+	num_feature = 4
+	print(X)
+	print(y)
 
-	best_f1 = 0
-	best_f1_sample = 0
-	best_f1_sample_result = 0
-	best_f1_estimator = 0
-	best_thresholds = []
+	for train_index, test_index in KF.split(X):
+		X_train, X_test = X[train_index], X[test_index]
+		Y_train, Y_test = y[train_index], y[test_index]
 
+		num_test = num_test + len(Y_test)
+		X_train = X_train.reshape((int(len(X_train)), num_feature))
 
+		rf = RandomForestClassifier()
+		predictor = rf.fit(X_train, Y_train)
 
-	for i in range(100):
-		print('Bootstrapping {} for {}'.format(i, p_name))
+		X_test = X_test.reshape((int(len(X_test)), num_feature))
+		Y_result=(predictor.predict(X_test))
 
-		while True:
-			print('Here for {} {}'.format(i, p_name))
-			sample_train = resample(train_data, replace=True, n_samples=len(train_data))
-			sample_train_result = sample_train['tr_status']
+		precision0 = precision_score(Y_test, Y_result)
+		recall0 = recall_score(Y_test, Y_result)
+		f10 = f1_score(Y_test, Y_result)
 
-			build_ids = sample_train['tr_build_id'].tolist()
-			sample_test = train_data [~train_data['tr_build_id'].isin(build_ids)] 
-			sample_test_result = sample_test['tr_status']
-			
-			if len(sample_test_result) != 0:
-				break
+		precision.append(precision0)
+		recall.append(recall0)
+		f1.append(f10)
+		fitted_model.append(rf)
 
-		sample_train.drop('tr_status', inplace=True, axis=1)
-		sample_train.drop('tr_build_id', inplace=True, axis=1)
-		sample_test.drop('tr_status', inplace=True, axis=1)
-		sample_test.drop('tr_build_id', inplace=True, axis=1)
-		
-		print('Training {} for {}'.format(i, p_name))
-		grid_search.fit(sample_train, sample_train_result)
-		sample_pred_vals = grid_search.predict_proba(sample_test)
+	best_f1 = max(f1)
+	max_index = f1.index(best_f1)
 
-		pred_vals = sample_pred_vals[:, 1]
-		fpr, tpr, t = roc_curve(sample_test_result, pred_vals)
-		gmeans = sqrt(tpr * (1-fpr))
-		ix = argmax(gmeans)
-		bt = t[ix]
-		best_thresholds.append(bt)
-
-		final_pred_result = []
-		for j in range(len(pred_vals)):
-			if pred_vals[j] > bt:
-				final_pred_result.append(1)
-			else:
-				final_pred_result.append(0)
-
-		try:
-			f1 = f1_score(sample_test_result, final_pred_result)
-		except:
-			print('')
-
-		if f1 > best_f1:
-			best_f1 = f1
-			best_f1_sample = sample_train
-			best_f1_sample_result = sample_train_result
-			best_f1_estimator = grid_search.best_estimator_
-
-		best_n_estimators.append(grid_search.best_params_['n_estimators'])
-		best_max_depth.append(grid_search.best_params_['max_depth'])
-	
-	#completed bootstrapping
-	threshold = median(best_thresholds)
-	n_estimator = median(best_n_estimators)
-	max_depth = median(best_max_depth)
-
-	forest = RandomForestClassifier(n_estimators=int(n_estimator), max_depth=int(max_depth))
-	forest.fit(best_f1_sample, best_f1_sample_result)'''
-
-	filename = '../RQ2/dump_data/rq2_' + p_name.split('.')[0] + '_best_model.pkl'
-	model_file = open(filename, 'rb')
-	forest = pickle.load(model_file)
-
+	best_fit_model = fitted_model[max_index]
 	#test_builds = test_data['tr_build_id'].tolist()
 	#test_data.drop('tr_build_id', inplace=True, axis=1)
 	#test_data.drop('tr_status', inplace=True, axis=1)
@@ -203,7 +168,7 @@ def with_cv_val(p_name):
 	test_data.drop('tr_build_id', inplace=True, axis=1)
 
 
-	y_pred = forest.predict(test_data)
+	y_pred = best_fit_model.predict(test_data)
 	print(y_pred)
 	print(y_val)
 
@@ -219,7 +184,7 @@ def with_cv_val(p_name):
 	#print(commit_values)
 	headers = ['tr_build_ids', 'tr_duration','Duration', 'Build_Result', 'Actual_Result']
 
-	file_name = './' + p_name.split('.')[0] + '_200_metrics.csv'
+	file_name = './' + p_name.split('.')[0] + '_rkm.csv'
 	result_df.to_csv(file_name)
 
 
@@ -321,41 +286,14 @@ def without_cv_val():
 		result_df.to_csv(file_name)
 
 
-project_names=['rails.csv', 'jruby.csv', 'metasploit-framework.csv', 'vagrant.csv', 'opal.csv', 'cloudify.csv', 'cloud_controller_ng.csv', 'rubinius.csv', 'open-build-service.csv', 'gradle.csv', 'sonarqube.csv', 'loomio.csv', 'fog.csv', 'puppet.csv', 'concerto.csv', 'sufia.csv', 'geoserver.csv', 'orbeon-forms.csv', 'graylog2-server.csv']
-
-new_projects = ['rubinius.csv', 'gradle.csv', 'loomio.csv', 'fog.csv', 'concerto.csv', 'sufia.csv', 'geoserver.csv', 'orbeon-forms.csv', 'graylog2-server.csv', 'puppet.csv', 'cloud_controller_ng.csv', 'rails.csv']
-
-jobs = []
-for p_name in project_names:
-	q = multiprocess.Process(target=with_cv_val, args=(p_name,))
-	jobs.append(q)
-	q.start()
-
-for j in jobs:
-    j.join()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+project_names=['rails.csv', 'jruby.csv', 'metasploit-framework.csv', 'heroku.csv', 'vagrant.csv', 'opal.csv', 'cloudify.csv', 'cloud_controller_ng.csv', 'rubinius.csv', 'open-build-service.csv', 'gradle.csv', 'sonarqube.csv', 'loomio.csv', 'fog.csv', 'puppet.csv', 'concerto.csv', 'sufia.csv', 'geoserver.csv', 'orbeon-forms.csv', 'graylog2-server.csv']
 
 
 
 
 
 def validation():
-	global project_names
+	project_names=['rails.csv', 'jruby.csv', 'metasploit-framework.csv', 'heroku.csv', 'vagrant.csv', 'opal.csv', 'cloudify.csv', 'cloud_controller_ng.csv', 'rubinius.csv', 'open-build-service.csv', 'gradle.csv', 'sonarqube.csv', 'loomio.csv', 'fog.csv', 'puppet.csv', 'concerto.csv', 'sufia.csv', 'geoserver.csv', 'orbeon-forms.csv', 'graylog2-server.csv']
 	
 	batchsize = [1,2,4,8,16,32]
 	batch_result = 'results/final_result.csv'
@@ -376,7 +314,7 @@ def validation():
 			res_writer = csv.writer(result_file)
 			res_writer.writerow(res_headers)
 
-			file_name = './' + project.split('.')[0] + '_200_metrics.csv'
+			file_name = './' + project.split('.')[0] + '_abcd_metrics.csv'
 
 			csv_file = pd.read_csv(file_name)
 
@@ -538,5 +476,14 @@ def validation():
 			# #print(len(csv_file))
 			# #print('Total time taken for builds:')
 			# #print(built_commits)
+
+
+
+
+if __name__ == '__main__':
+	with multiprocess.Pool(5) as p:
+		p.map(with_cv_val, project_names)
+
+
 
 validation()

@@ -9,6 +9,7 @@ import numpy as np
 from numpy import argmax
 from numpy import sqrt
 import math
+from sklearn.model_selection import RepeatedKFold
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import train_test_split
@@ -30,7 +31,7 @@ warnings.filterwarnings("ignore")
 
 
 MAX_BATCH = [2, 4, 8, 16]
-algorithm = ['BATCH4', 'BATCHBISECT', 'BATCHSTOP4']
+algorithm = ['BATCH4','BATCHBISECT', 'BATCHSTOP4']
 
 
 # In[18]:
@@ -38,13 +39,13 @@ algorithm = ['BATCH4', 'BATCHBISECT', 'BATCHSTOP4']
 
 projects = ['rails.csv', 'jruby.csv', 'metasploit-framework.csv', 'cloudify.csv', 'vagrant.csv', 'rubinius.csv', 'open-build-service.csv', 'gradle.csv', 'sonarqube.csv', 'loomio.csv', 'fog.csv', 'opal.csv', 'cloud_controller_ng.csv', 'puppet.csv', 'concerto.csv', 'sufia.csv', 'geoserver.csv', 'orbeon-forms.csv', 'graylog2-server.csv', 'heroku.csv']
 data_path = '../data/'
-confidence = list(range(2,21,1))
-
+#confidence = list(range(2,21,1))
+confidence = [10, 20]
 
 # In[19]:
 
 
-result_file = open('ssr_algorithms.csv', 'w')
+result_file = open('trial_ssr_debug.csv', 'w')
 result_headers = ['project', 'algorithm', 'batch_size', 'confidence', 'project_reqd_builds', 'project_missed_builds', 'project_build_duration', 'project_saved_builds', 'project_delays', 'testall_size', 'batch_delays']
 writer = csv.writer(result_file)
 writer.writerow(result_headers)
@@ -146,119 +147,73 @@ def get_first_failures(df):
 
 
 def pd_get_train_test_data(file_path):
-    columns = ['tr_build_id', 'gh_team_size', 'git_diff_src_churn', 'git_diff_test_churn', 'gh_diff_files_modified', 'tr_status']
+    columns = ['gh_team_size', 'git_diff_src_churn', 'git_diff_test_churn', 'gh_diff_files_modified', 'tr_status']
     X = pd.read_csv(file_path, usecols = columns)
     X['tr_status'] = output_values(X['tr_status'])
     Y = X['tr_status']
+    X.drop('tr_status', inplace=True, axis=1)
     #X = get_first_failures(X)
     #X.drop('tr_status', inplace=True, axis=1)
-    
-    return X, Y
+    #return X, Y
+    return X.to_numpy(), np.array(Y)
 
 
 # In[52]:
 
 
-def sbs(project):
-    
+def sbs(project_name):
+    global writer    
     #dataset already has first failures
-    train_file = "../data/train_data/" + project + '_train.csv'
+    train_file = "../data/train_data/" + project_name + '_train.csv'
     num_feature = 4
-    
-    X_train, Y_train = pd_get_train_test_data(train_file)
-    
-    #X_train = X_train.reshape((int(len(X_train)), num_feature+1))
-    print(X_train)
-    print(Y_train)
-    
-    n_estimators = [int(x) for x in np.linspace(start = 200, stop = 2000, num = 10)]
-    max_depth = [int(x) for x in np.linspace(10, 110, num = 5)]
-    
-    rf = RandomForestClassifier()
-    param_grid = {'n_estimators': n_estimators, 'max_depth': max_depth}
-    grid_search = GridSearchCV(estimator = rf, param_grid = param_grid, cv = 3, n_jobs = -1, verbose = 0)
-    
-    best_n_estimators = []
-    best_max_depth = []
-    
-    best_f1 = 0
-    best_f1_sample = 0
-    best_f1_sample_result = 0
-    best_f1_estimator = 0
-    best_thresholds = []
-    
-    for i in range(100):
-        print('Bootstrapping {} for {}'.format(i, project))
-        
-        while True:
-            print('Here for {} {}'.format(i, project))
-            sample_train = resample(X_train, replace=True, n_samples=len(X_train))
-            sample_train_result = sample_train['tr_status']
+    num_test = 0
 
-            build_ids = sample_train['tr_build_id'].tolist()
-            sample_test = X_train [~X_train['tr_build_id'].isin(build_ids)] 
-            sample_test_result = sample_test['tr_status']
+    precision = []
+    recall = []
+    f1 = []
+    build_save = []
+    fitted_model = []
+    
 
-            if len(sample_test_result) != 0:
-                break
-        
-        sample_train.drop('tr_status', inplace=True, axis=1)
-        sample_train.drop('tr_build_id', inplace=True, axis=1)
-        sample_test.drop('tr_status', inplace=True, axis=1)
-        sample_test.drop('tr_build_id', inplace=True, axis=1)
-        
-        print('Training {} for {}'.format(i, project))
-        grid_search.fit(sample_train.values, sample_train_result.values)
-        sample_pred_vals = grid_search.predict_proba(sample_test.values)
+    X, y =  pd_get_train_test_data(train_file)
+    pkl_file = '../data/data_pickles/' + project_name + '_indexes.pkl'
+    with open(pkl_file, 'rb') as load_file:
+        train_build_ids = pickle.load(load_file)
+        test_build_ids = pickle.load(load_file)
 
-        pred_vals = sample_pred_vals[:, 1]
-        fpr, tpr, t = roc_curve(sample_test_result, pred_vals)
-        gmeans = sqrt(tpr * (1-fpr))
-        ix = argmax(gmeans)
-        bt = t[ix]
-        best_thresholds.append(bt)
-        
-        final_pred_result = []
-        #threshold setting
-        for j in range(len(pred_vals)):
-            if pred_vals[j] > bt:
-                final_pred_result.append(1)
-            else:
-                final_pred_result.append(0)
-        
+    print("We are training from scratch and this is repeated K fold") 
+    KF = RepeatedKFold(n_splits=10, n_repeats=10)
+    for train_index, test_index in KF.split(X):
+        X_train, X_test = X[train_index], X[test_index]
+        Y_train, Y_test = y[train_index], y[test_index]
+        num_test = num_test + len(Y_test)
+        X_train = X_train.reshape((int(len(X_train)), num_feature))
+
         try:
-            f1 = f1_score(sample_test_result, final_pred_result)
+            rf = RandomForestClassifier(class_weight={0:0.05,1:1})
+            predictor = rf.fit(X_train, Y_train)
         except:
-            print('')
+            rf = RandomForestClassifier()
+            predictor = rf.fit(X_train, Y_train)
+    
+        X_test = X_test.reshape((int(len(X_test)), num_feature))
+        Y_result=(predictor.predict(X_test))
+    
+        precision0 = precision_score(Y_test, Y_result)
+        recall0 = recall_score(Y_test, Y_result)
+        f10 = f1_score(Y_test, Y_result)
 
-        if f1 > best_f1:
-            best_f1 = f1
-            best_f1_sample = sample_train.values
-            best_f1_sample_result = sample_train_result.values
-            best_f1_estimator = grid_search.best_estimator_
-            print(best_f1_sample)
-            
-        best_n_estimators.append(grid_search.best_params_['n_estimators'])
-        best_max_depth.append(grid_search.best_params_['max_depth'])
-        
-    #completed with bootstrapping 
-    threshold = median(best_thresholds)
-    n_estimator = median(best_n_estimators)
-    max_depth = median(best_max_depth)
+        precision.append(precision0)
+        recall.append(recall0)
+        f1.append(f10)
+        fitted_model.append(rf)
 
-    #retrain to get the best model
-    forest = RandomForestClassifier(n_estimators=int(n_estimator), max_depth=int(max_depth))
-    forest.fit(best_f1_sample, best_f1_sample_result)
+    best_f1 = max(f1)
+    max_index = f1.index(best_f1)
+    print('Best F1: {}, Precision:{}, Recall:{}'.format(best_f1, precision[max_index], recall[max_index]))
+    best_fit_model = fitted_model[max_index]
+    return best_fit_model
 
-    file_name = 'dump_data/rq2_' + project + '_best_model.pkl'
-    dump_file = open(file_name, 'wb')
-    pickle.dump(forest, dump_file)
-    pickle.dump(threshold, dump_file)
-    pickle.dump(n_estimator, dump_file)
-    pickle.dump(max_depth, dump_file)
-                
-    #predictor = rf.fit(X_train, Y_train)
-    return forest, threshold
 
 
 # In[53]:
@@ -283,15 +238,15 @@ batch_durations = 0
 def batch_bisect(grouped_batch, actual_group_results, durations):
     global batch_total
     global batch_durations
-    
+ 
     batch_total += 1
     batch_durations += max(durations)
     
-    if len(grouped_batch) == 1:
+    if len(actual_group_results) == 1:
         return
     
     if 0 in actual_group_results:
-        half_batch = len(grouped_batch)//2
+        half_batch = len(actual_group_results)//2
         batch_bisect(grouped_batch[:half_batch], actual_group_results[:half_batch], durations[:half_batch])
         batch_bisect(grouped_batch[half_batch:], actual_group_results[half_batch:], durations[half_batch:])
 
@@ -306,13 +261,14 @@ def batch_stop_4(grouped_batch, actual_group_results, durations):
     batch_total += 1
     batch_durations += max(durations)
     
-    if len(grouped_batch) <= 4:
-        batch_total += 4
-        batch_durations += sum(durations)
+    if len(actual_group_results) <= 4:
+        if 0 in actual_group_results:
+            batch_total += 4
+            batch_durations += sum(durations)
         return
     
     if 0 in actual_group_results:
-        half_batch = len(grouped_batch)//2
+        half_batch = len(actual_group_results)//2
         batch_stop_4(grouped_batch[:half_batch], actual_group_results[:half_batch], durations[:half_batch])
         batch_stop_4(grouped_batch[half_batch:], actual_group_results[half_batch:], durations[half_batch:])
 
@@ -321,23 +277,33 @@ def batch_stop_4(grouped_batch, actual_group_results, durations):
 
 
 def static_rule(p):
-    
+    global writer
     global batch_total
     global batch_durations
     
     p = p.split('.')[0]
 
-    predictor, threshold = sbs(p)
+    result_file_name = p + '_rkm_ssr.csv'
 
+    #predictor, threshold = sbs(p)
+    predictor = sbs(p)
+    result_file = open(result_file_name, 'w')
+    result_headers = ['project', 'algorithm', 'batch_size', 'confidence', 'project_reqd_builds', 'project_missed_builds', 'project_build_duration', 'project_saved_builds', 'project_delays', 'testall_size', 'batch_delays']
+    writer = csv.writer(result_file)
+    writer.writerow(result_headers)
+    #model_file_name = 'dump_data/rq2_' + p + '_best_model.pkl'
+    #model_file = open(model_file_name, 'rb')
+    #predictor = pickle.load(model_file)
+    #threshold = pickle.load(model_file)
+    
     #get the test data
     
     test_file = "../data/test_data/" + p + '_test.csv'
-    X_test, Y_test = pd_get_train_test_data(test_file)
+    #X_test, Y_test = pd_get_train_test_data(test_file)
     Y_duration = get_durations(test_file)
-    
-    X_test.drop('tr_build_id', inplace=True, axis=1)
-    X_test.drop('tr_status', inplace=True, axis=1)
-    
+
+    X_test, y_test =  pd_get_train_test_data(test_file)
+        
     
     for alg in algorithm:
         for max_batch_size in MAX_BATCH:
@@ -350,7 +316,7 @@ def static_rule(p):
                 if max_batch_size < 4:
                     continue
                     
-            
+            #print('Processing {} at batch size {} for {}'.format(alg, max_batch_size, p))
 
 
             Y_result = []
@@ -358,7 +324,7 @@ def static_rule(p):
             actual_group_results = []
             group_duration = []
             num_feature = 4 
-            length_of_test = len(Y_test)
+            length_of_test = len(y_test)
 
             project_reqd_builds = []
             project_missed_builds = []
@@ -368,13 +334,14 @@ def static_rule(p):
             project_bad_builds = []
             project_batch_delays = []
 
-            print('Processing {}'.format(p))
+            #print('Processing {}'.format(p))
             for c in confidence:
                 
                 batch_delays = 0
 
-                pass_streak = Y_test[0]
-                total_builds = Y_test[0]
+                pass_streak = y_test[0]
+                #total_builds = Y_test[0]
+                total_builds = 0
                 missed_builds = 0
                 miss_indexes = []
                 build_indexes = []
@@ -389,32 +356,26 @@ def static_rule(p):
 
                 index = 1
                 while index < len(X_test):
-                    commit = X_test.iloc[index]
-                    predict = predictor.predict_proba([commit])
-                    #we're setting a confidence of 'c' builds on SBS, if more than 'c' passes have been suggested in a row, we don't want to trust sbs
-                    
-                    if predict[0][1] > threshold:
-                        value = 1
-                    else:
-                        value = 0
-                    
-                    
+                    commit = X_test[index]
+                    value = predictor.predict([commit])
+                                        
                     if pass_streak < c :
                         
                         if value == 0:
-                            
+                            #print(' c < threshold ; predicted to fail')
+                            pass_streak = 1
                             while True:
 
                                 grouped_batch = list(X_test[index : index+max_batch_size])
-                                actual_group_results = list(Y_test[index : index+max_batch_size])
+                                actual_group_results = list(y_test[index : index+max_batch_size])
                                 group_duration = Y_duration[index : index+max_batch_size]
 
-                #                 if len(grouped_batch) < max_batch_size:
-                #                     grouped_batch.append(index)
-                #                     actual_group_results.append(Y_test[index])
-                #                     group_duration.append(Y_duration[index])
+                                #print(grouped_batch)
+                                #print(group_duration)
+                                #print('Miss indexes: {}'.format(miss_indexes))
+
                                 if alg == 'BATCH4':
-                                    if len(grouped_batch) == max_batch_size:
+                                    if len(actual_group_results) == max_batch_size:
                                         if len(miss_indexes) > 0:
                                             if miss_indexes[-1] < index:
                                                 for l in range(len(miss_indexes)):
@@ -434,7 +395,7 @@ def static_rule(p):
                                         group_duration.clear()
 
                                 elif alg == 'BATCHBISECT':
-                                    if len(grouped_batch) == max_batch_size:
+                                    if len(actual_group_results) == max_batch_size:
                                         if len(miss_indexes) > 0:
                                             if miss_indexes[-1] < index:
                                                 for l in range(len(miss_indexes)):
@@ -445,15 +406,16 @@ def static_rule(p):
                                         batch_durations = 0
 
                                         batch_bisect(grouped_batch, actual_group_results, group_duration)
-
                                         batch_delays += max_batch_size*(max_batch_size-1)/2
                                         total_builds += batch_total
                                         total_duration += batch_durations
+                                        #print(actual_group_results)
+                                        #print('Total builds = {}, batch_total = {}, batch_delays={}'.format(total_builds, batch_total, batch_delays))
 
                                         grouped_batch.clear()
                                         actual_group_results.clear()
                                 elif alg == 'BATCHSTOP4':
-                                    if len(grouped_batch) == max_batch_size:
+                                    if len(actual_group_results) == max_batch_size:
                                         if len(miss_indexes) > 0:
                                             if miss_indexes[-1] < index:
                                                 for l in range(len(miss_indexes)):
@@ -468,6 +430,9 @@ def static_rule(p):
                                         batch_delays += max_batch_size*(max_batch_size-1)/2
                                         total_builds += batch_total
                                         total_duration += batch_durations
+
+                                        #print(actual_group_results)
+                                        #print('Total builds = {}, batch_total = {}, batch_delays={}'.format(total_builds, batch_total, batch_delays))
 
                                         grouped_batch.clear()
                                         actual_group_results.clear()
@@ -488,25 +453,19 @@ def static_rule(p):
                                         actual_group_results.clear()
                                         group_duration.clear()
 
-                                index += max_batch_size
-                                pass_streak = 1                            
 
                                 if 0 in actual_group_results:
                                     index += max_batch_size
                                 else:
                                     break
+                            pass_streak = 1
+                            index += max_batch_size
                                 
-#                             total_builds += 1
-#                             total_duration += Y_duration[index]
-#                             if len(miss_indexes) > 0:
-#                                 if miss_indexes[-1] < index:
-#                                     for l in range(len(miss_indexes)):
-#                                         e = miss_indexes.pop()
-#                                         delay_durations.append(index - e + 1)
                         else:
+                            #print(' c < threshold ; predicted to pass')
                             pass_streak += 1
                             saved_builds += 1
-                            if Y_test[index] == 0:
+                            if y_test[index] == 0:
                                 missed_builds += 1
                                 miss_indexes.append(index)
 
@@ -514,20 +473,16 @@ def static_rule(p):
                             index += 1
 
                     else:
-                        
+                        #print('c > threshold')
                         while True:
 
                             grouped_batch = list(X_test[index : index+max_batch_size])
-                            actual_group_results = list(Y_test[index : index+max_batch_size])
+                            actual_group_results = list(y_test[index : index+max_batch_size])
                             group_duration = Y_duration[index : index+max_batch_size]
 
-            #                 if len(grouped_batch) < max_batch_size:
-            #                     grouped_batch.append(index)
-            #                     actual_group_results.append(Y_test[index])
-            #                     group_duration.append(Y_duration[index])
 
                             if alg == 'BATCH4':
-                                if len(grouped_batch) == max_batch_size:
+                                if len(actual_group_results) == max_batch_size:
                                     if len(miss_indexes) > 0:
                                         if miss_indexes[-1] < index:
                                             for l in range(len(miss_indexes)):
@@ -547,7 +502,7 @@ def static_rule(p):
                                     group_duration.clear()
 
                             elif alg == 'BATCHBISECT':
-                                if len(grouped_batch) == max_batch_size:
+                                if len(actual_group_results) == max_batch_size:
                                     if len(miss_indexes) > 0:
                                         if miss_indexes[-1] < index:
                                             for l in range(len(miss_indexes)):
@@ -563,11 +518,15 @@ def static_rule(p):
                                     total_builds += batch_total
                                     total_duration += batch_durations
 
+                                    #print(actual_group_results)
+                                    #print('Total builds = {}, batch_total = {}, batch_delays={}'.format(total_builds, batch_total, batch_delays))
+                                    #print('Total builds = {}, batch_delays={}'.format(total_builds, batch_delays))
+
                                     grouped_batch.clear()
                                     actual_group_results.clear()
                                     group_duration.clear()
                             elif alg == 'BATCHSTOP4':
-                                if len(grouped_batch) == max_batch_size:
+                                if len(actual_group_results) == max_batch_size:
                                     if len(miss_indexes) > 0:
                                         if miss_indexes[-1] < index:
                                             for l in range(len(miss_indexes)):
@@ -582,6 +541,9 @@ def static_rule(p):
                                     batch_delays += max_batch_size*(max_batch_size-1)/2
                                     total_builds += batch_total
                                     total_duration += batch_durations
+
+                                    #print(actual_group_results)
+                                    #print('Total builds = {}, batch_total = {}, batch_delays={}'.format(total_builds, batch_total, batch_delays))
 
                                     grouped_batch.clear()
                                     actual_group_results.clear()
@@ -602,21 +564,20 @@ def static_rule(p):
                                     actual_group_results.clear()
                                     group_duration.clear()
 
-                            index += max_batch_size
-                            pass_streak = 1
-                            
+                            pass_streak = 1 
                             if 0 in actual_group_results:
                                 index += max_batch_size
                             else:
                                 break
+                        index += max_batch_size
                     
 
-        #         print('\tFor confidence {}:'.format(c))
-        #         print('\t\tTotal builds needed : {}'.format(total_builds))
-        #         print('\t\tTotal number of missed builds : {}'.format(missed_builds))
-        #         print('\t\tTotal number of saved builds : {}'.format(saved_builds))
-        #         print('\t\tTotal duration of builds : {}'.format(total_duration))
-        #         print('\t\tTotal delays: {}'.format(delay_durations))
+                #print('\tFor confidence {}:'.format(c))
+                #print('\t\tTotal builds needed : {}'.format(total_builds))
+                #print('\t\tTotal number of missed builds : {}'.format(missed_builds))
+                #print('\t\tTotal number of saved builds : {}'.format(saved_builds))
+                #print('\t\tTotal duration of builds : {}'.format(total_duration))
+                #print('\t\tTotal delays: {}'.format(delay_durations))
 
                 project_reqd_builds.append(total_builds)
                 project_missed_builds.append(missed_builds)
@@ -625,13 +586,13 @@ def static_rule(p):
                 project_delays.append(delay_durations)
                 project_batch_delays.append(batch_delays)
 
-            print(p)
-            print(project_reqd_builds)
-            print(project_missed_builds)
-            print(project_build_duration)
-            print(project_saved_builds)
-            print(project_delays)
-            print(project_batch_delays)
+            #print(p)
+            #print(project_reqd_builds)
+            #print(project_missed_builds)
+            #print(project_build_duration)
+            #print(project_saved_builds)
+            #print(project_delays)
+            #print(project_batch_delays)
             
             for i in range(len(confidence)):
                 print([p, alg, max_batch_size, confidence[i], 100*project_reqd_builds[i]/length_of_test, 100*project_missed_builds[i]/length_of_test, project_build_duration[i], 100*project_saved_builds[i]/length_of_test, project_delays[i], length_of_test, project_batch_delays[i]])

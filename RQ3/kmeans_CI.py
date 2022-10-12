@@ -19,7 +19,7 @@ from sklearn.metrics import precision_recall_curve
 from sklearn.metrics import f1_score
 from sklearn.metrics import recall_score
 from sklearn.metrics import precision_score
-from sklearn.model_selection import KFold
+from sklearn.model_selection import RepeatedKFold
 from matplotlib import pyplot
 from statistics import median
 import pickle
@@ -158,6 +158,23 @@ def hybrid_performance(p_name, test_builds, test_result, batchsize, ci):
     
 #     print(delay_indexes)
 #     print(built_indexes)
+    dp = 0
+    bp = 0
+    temp_delay = 0
+    total_delay = 0
+
+    while bp < len(built_indexes):
+        while dp<len(delay_indexes) and delay_indexes[dp] < built_indexes[bp] :
+            temp_delay = built_indexes[bp] - delay_indexes[dp]
+            total_delay += temp_delay
+            dp += 1
+        bp += 1
+
+    while dp < len(delay_indexes):
+        temp_delay = len(ci) - delay_indexes[dp]
+        total_delay += temp_delay
+        dp += 1
+
     from_value = 0
     
     for k in range(len(built_indexes)):
@@ -179,8 +196,8 @@ def hybrid_performance(p_name, test_builds, test_result, batchsize, ci):
 #     print('Total % of failures identified for {} = {}'.format(p_name, failures_found))
 #     print('Total % of failures unidentified for {} = {}'.format(p_name, 100*num_of_failure_unidentified/test_result.count(0)))
 #     print("===========================================")
-    
-    return (sum(delay), failures_found, 100*num_of_failure_unidentified/test_result.count(0), bad_builds)
+    print('Humour: total_delay: {}, previous_delay_method: {}'.format(total_delay, sum(delay)))
+    return (total_delay, failures_found, 100*num_of_failure_unidentified/test_result.count(0), bad_builds)
 
 
 # In[47]:
@@ -241,7 +258,7 @@ def bootstrapping(p_name):
     
     print('Processing {}'.format(p_name))
 
-    r_file_name = p_name.split('.')[0] + '_9_10_batching.csv'
+    r_file_name = p_name.split('.')[0] + '_rkmeans.csv'
 
     result_file = open(r_file_name, 'w')
     result_headers = ['project', 'algorithm', 'batch_size', 'time_reqd', 'builds_reqd', 'total_delay', 'failures_found', 'failures_not_found', 'bad_builds', 'batch_delays', 'testall_size', 'ci']
@@ -251,14 +268,6 @@ def bootstrapping(p_name):
     #This will return the entire dataset with X and Y values
     project = get_complete_data(p_name)
     
-    #grid search hyperparameters
-    n_estimators = [int(x) for x in np.linspace(start = 200, stop = 2000, num = 10)]
-    max_depth = [int(x) for x in np.linspace(10, 110, num = 5)]
-    
-    #setting up grid search
-    param_grid = {'n_estimators': n_estimators, 'max_depth': max_depth}
-    forest = RandomForestClassifier()
-    grid_search = GridSearchCV(estimator = forest, param_grid = param_grid, cv = 3, n_jobs = -1, verbose = 0)
     
     pkl_file = '../data/data_pickles/' + p_name.split('.')[0] + '_indexes.pkl'
     with open(pkl_file, 'rb') as load_file:
@@ -273,7 +282,13 @@ def bootstrapping(p_name):
     
     #add pass_streak to training data:
     train_data['num_of_passes'] = get_pass_streak(train_result)
-    
+
+    train_data.drop('tr_build_id', inplace=True, axis=1)
+    train_data.drop('tr_status', inplace=True, axis=1)
+
+    X = train_data.to_numpy()
+    y = np.array(train_result)
+ 
     best_n_estimators = []
     best_max_depth = []
 
@@ -283,86 +298,64 @@ def bootstrapping(p_name):
     best_f1_estimator = 0
     best_thresholds = []
 
+    #grid search hyperparameters
+    n_estimators = [int(x) for x in np.linspace(start = 200, stop = 2000, num = 10)]
+    max_depth = [int(x) for x in np.linspace(10, 110, num = 5)]
+    
+    #setting up grid search
+    param_grid = {'n_estimators': n_estimators, 'max_depth': max_depth}
+    forest = RandomForestClassifier()
+    grid_search = GridSearchCV(estimator = forest, param_grid = param_grid, cv = 3, n_jobs = -1, verbose = 0)
+    
+
+    KF = RepeatedKFold(n_splits=10, n_repeats=10, random_state = 2585438258)
+
+    num_test = 0
+    num_feature=9
+
+    precision = []
+    recall = []
+    f1 = []
+    build_save = []
+    fitted_model = []
+
+    for train_index, test_index in KF.split(X):
+        X_train, X_test = X[train_index], X[test_index]
+        Y_train, Y_test = y[train_index], y[test_index]
+
+        num_test = num_test + len(Y_test)
+        X_train = X_train.reshape((int(len(X_train)), num_feature))
+
+        predictor = forest.fit(X_train, Y_train)
+
+        X_test = X_test.reshape((int(len(X_test)), num_feature))
+        Y_result=(predictor.predict(X_test))
+        precision0 = precision_score(Y_test, Y_result)
+        recall0 = recall_score(Y_test, Y_result)
+        f10 = f1_score(Y_test, Y_result)
+
+        precision.append(precision0)
+        recall.append(recall0)
+        f1.append(f10)
+        fitted_model.append(predictor)
+
+
+    best_f1 = max(f1)
+    max_index = f1.index(best_f1)
+    best_fit_model = fitted_model[max_index]
+    filename = '../../../dump_data/rq3_' + p_name + '_best_model.pkl'
+    loadfile = open(filename, 'rb')
+    best_fit_model = pickle.load(loadfile)
+    #KMeans done, Testing now
+    final_pred_result = []
         
-    #bootstrap 100 times
-    for i in range(100):
-        print('Bootstrapping {} for {}'.format(i, p_name))
-
-        #Ensuring we get a non-zero training or testing sample
-        while True:
-            print('Here for {} {}'.format(i, p_name))
-            sample_train = resample(train_data, replace=True, n_samples=len(train_data))
-            sample_train_result = sample_train['tr_status']
-
-            build_ids = sample_train['tr_build_id'].tolist()
-            sample_test = train_data [~train_data['tr_build_id'].isin(build_ids)] 
-            sample_test_result = sample_test['tr_status']
-
-            if len(sample_test_result) != 0:
-                break
-
-        #dropping result column and build ids column
-        sample_train.drop('tr_status', inplace=True, axis=1)
-        sample_train.drop('tr_build_id', inplace=True, axis=1)
-        sample_test.drop('tr_status', inplace=True, axis=1)
-        sample_test.drop('tr_build_id', inplace=True, axis=1)
-
-        #training the sample
-        print('Training {} for {}'.format(i, p_name))
-        grid_search.fit(sample_train, sample_train_result)
-        sample_pred_vals = grid_search.predict_proba(sample_test)
-
-        pred_vals = sample_pred_vals[:, 1]
-        fpr, tpr, t = roc_curve(sample_test_result, pred_vals)
-        gmeans = sqrt(tpr * (1-fpr))
-        ix = argmax(gmeans)
-        bt = t[ix]
-        best_thresholds.append(bt)
-
-        final_pred_result = []
-        #threshold setting
-        for j in range(len(pred_vals)):
-            if pred_vals[j] > bt:
-                final_pred_result.append(1)
-            else:
-                final_pred_result.append(0)
-
-        try:
-            f1 = f1_score(sample_test_result, final_pred_result)
-        except:
-            print('')
-
-        if f1 > best_f1:
-            best_f1 = f1
-            best_f1_sample = sample_train
-            best_f1_sample_result = sample_train_result
-            best_f1_estimator = grid_search.best_estimator_
-            
-        best_n_estimators.append(grid_search.best_params_['n_estimators'])
-        best_max_depth.append(grid_search.best_params_['max_depth'])
-        
-
-    #completed with bootstrapping 
-    threshold = median(best_thresholds)
-    n_estimator = median(best_n_estimators)
-    max_depth = median(best_max_depth)
-
-    #retrain to get the best model
-    forest = RandomForestClassifier(n_estimators=int(n_estimator), max_depth=int(max_depth))
-    forest.fit(best_f1_sample, best_f1_sample_result)
-
-    file_name = 'dump_data/rq3_' + p_name + '_best_model_9_10.pkl'
-    dump_file = open(file_name, 'wb')
-    pickle.dump(forest, dump_file)
-    pickle.dump(threshold, dump_file)
-    pickle.dump(n_estimator, dump_file)
-    pickle.dump(max_depth, dump_file)
-
-
     test_builds = test_data['tr_build_id'].tolist()
     durations = get_required_data(p_name, test_builds)
     test_data.drop('tr_build_id', inplace=True, axis=1)
     test_data.drop('tr_status', inplace=True, axis=1)
+
+    X_val = test_data.to_numpy()
+    y_val = np.array(test_result)
 
     batchsizelist = [2, 4, 8, 16]
     algorithms = ['BATCH4', 'BATCHSTOP4', 'BATCHBISECT']
@@ -387,11 +380,10 @@ def bootstrapping(p_name):
 
             if alg == 'NOBATCH':
                 while i < total:
-                    data = test_data.iloc[i]
-                    data['num_of_passes'] = pass_streak
-                    predict = grid_search.predict_proba([data])
+                    data = np.append(X_val[i], pass_streak)
+                    predict = best_fit_model.predict([data])
 
-                    if predict[0][1] > threshold:
+                    if predict == 1:
                         final_pred_result.append(1)
                         ci.append(1)
                         pass_streak += 1
@@ -407,7 +399,7 @@ def bootstrapping(p_name):
                             batch_delays += (batchsize - 1)*batchsize*0.5
 
                             batch_build_times = durations[i:i+4]
-                            actual_batch_results = test_result[i:i+4]
+                            actual_batch_results = y_val[i:i+4]
 
                             num_of_builds += 1
                             build_duration += max(batch_build_times)
@@ -425,12 +417,11 @@ def bootstrapping(p_name):
                     continue
                 else:
                         while i < total :
-                            data = test_data.iloc[i]
-                            data['num_of_passes'] = pass_streak
-                            predict = forest.predict_proba([data])
+                            data = np.append(X_val[i], pass_streak)
+                            predict = best_fit_model.predict([data])
 
                             #predicted that build has passed
-                            if predict[0][1] > threshold:
+                            if predict == 1:
                                 final_pred_result.append(1)
                                 ci.append(1)
                                 pass_streak += 1
@@ -449,7 +440,7 @@ def bootstrapping(p_name):
                                     batch_delays += (batchsize - 1)*batchsize*0.5
 
                                     batch_build_times = durations[i:i+4]
-                                    actual_batch_results = test_result[i:i+4]
+                                    actual_batch_results = y_val[i:i+4]
                                     
                                     num_of_builds += 1                                    
                                     build_duration += max(batch_build_times)
@@ -475,11 +466,10 @@ def bootstrapping(p_name):
                     pass_streak = 0
                     ci = []
                     while i < total :
-                        data = test_data.iloc[i]
-                        data['num_of_passes'] = pass_streak
-                        predict = forest.predict_proba([data])
+                        data = np.append(X_val[i], pass_streak)
+                        predict = best_fit_model.predict([data])
                         
-                        if predict[0][1] > threshold:
+                        if predict == 1:
                             ci.append(1)
                             pass_streak += 1
                             i += 1
@@ -494,7 +484,7 @@ def bootstrapping(p_name):
 
                                 batch_delays += (batchsize - 1)*batchsize*0.5
                                 
-                                grouped_batch_results = test_result[i:i+batchsize]
+                                grouped_batch_results = y_val[i:i+batchsize]
                                 batch_build_times = durations[i:i+batchsize]
                                 batch_total = 0
                                 batch_duration = 0
@@ -507,7 +497,7 @@ def bootstrapping(p_name):
                                     break
                                 else:
                                     i += batchsize
-                                grouped_batch_results.clear()
+                                #grouped_batch_results = np.delete(grouped_batch_results, list(range(grouped_batch_results)))
                             i += batchsize
                             pass_streak = 1
             
@@ -517,11 +507,10 @@ def bootstrapping(p_name):
                 ci = []
                 
                 while i < total :
-                    data = test_data.iloc[i]
-                    data['num_of_passes'] = pass_streak
-                    predict = forest.predict_proba([data])
+                    data = np.append(X_val[i], pass_streak)
+                    predict = best_fit_model.predict([data])
                     
-                    if predict[0][1] > threshold:
+                    if predict == 1:
                         ci.append(1)
                         pass_streak += 1
                         i += 1
@@ -540,7 +529,7 @@ def bootstrapping(p_name):
                             
                             batch_delays += (batchsize - 1)*batchsize*0.5
 
-                            grouped_batch_results = test_result[i:i+batchsize]
+                            grouped_batch_results = y_val[i:i+batchsize]
                             batch_build_times = durations[i:i+batchsize]
                             
                             batch_total = 0
@@ -555,11 +544,12 @@ def bootstrapping(p_name):
                             else:
                                 i += batchsize
                                 
-                            grouped_batch_results.clear()
+                            #grouped_batch_results.clear()
                         i += batchsize
                         pass_streak = 1
 
-
+            print(ci)
+            print(test_result)
             batch_performance = hybrid_performance(p_name, test_builds, test_result, batchsize, ci)
             total_delay = batch_performance[0]
             failures_found = batch_performance[1]
@@ -570,6 +560,9 @@ def bootstrapping(p_name):
             local_time_reqd = 100*build_duration/sum(durations)
             
             writer.writerow([p_name, alg, batchsize, local_time_reqd, local_builds_reqd, total_delay, failures_found, failures_not_found, bad_builds, batch_delays, total, ci])
+            #print(ci)
+            #print(test_result)
+            print('\n\n\n')
     print('\n\n\n\n\n')
 
 
@@ -592,6 +585,8 @@ def bootstrapping(p_name):
 #for j in jobs:
 #    j.join()
 
+#for xi in project_list[9:]:
+#    bootstrapping(xi)
 
 if __name__ == '__main__':
 	with multiprocess.Pool(5) as p:
