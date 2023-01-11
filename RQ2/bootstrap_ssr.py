@@ -345,12 +345,12 @@ def static_rule(p):
     p = p.split('.')[0]
 
     
-    #predictor, threshold = sbs(p)
+    predictor, threshold = sbs(p)
 
-    model_file_name = 'rq2_dump_data/rq2_' + p + '_best_model.pkl'
-    model_file = open(model_file_name, 'rb')
-    predictor = pickle.load(model_file)
-    threshold = pickle.load(model_file)
+#     model_file_name = 'rq2_dump_data/rq2_' + p + '_best_model.pkl'
+#     model_file = open(model_file_name, 'rb')
+#     predictor = pickle.load(model_file)
+#     threshold = pickle.load(model_file)
     
     #get the test data
     
@@ -738,8 +738,8 @@ def static_rule(p):
                 writer.writerow([p, alg, max_batch_size, confidence[i], 100*project_reqd_builds[i]/length_of_test, 100*project_missed_builds[i]/length_of_test, project_build_duration[i], 100*project_saved_builds[i]/length_of_test, project_delays[i], length_of_test, project_batch_delays[i]])
 # In[ ]:
 
-for pr in projects[1:]:
-    static_rule(pr)
+# for pr in projects[1:]:
+#     static_rule(pr)
 #static_rule('sufia.csv')
 #static_rule('vagrant.csv')
 #if __name__ == '__main__':
