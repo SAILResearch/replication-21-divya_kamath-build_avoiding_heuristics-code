@@ -29,8 +29,8 @@ warnings.filterwarnings("ignore")
 # In[17]:
 
 
-MAX_BATCH = [2, 4, 8, 16]
-algorithm = ['BATCH4', 'BATCHBISECT', 'BATCHSTOP4']
+MAX_BATCH = [1, 2, 4, 8, 16]
+algorithm = ['BATCHBISECT', 'BATCH4', 'BATCHSTOP4']
 
 
 # In[18]:
@@ -44,11 +44,11 @@ confidence = list(range(2,21,1))
 # In[19]:
 
 
-result_file = open('sufia_delay_debug.csv', 'w')
+result_file = open('gfm_all_ssr_results.csv', 'w')
 result_headers = ['project', 'algorithm', 'batch_size', 'confidence', 'project_reqd_builds', 'project_missed_builds', 'project_build_duration', 'project_saved_builds', 'project_delays', 'testall_size', 'batch_delays']
 writer = csv.writer(result_file)
 writer.writerow(result_headers)
-
+result_file.close()
 
 # In[20]:
 
@@ -146,7 +146,7 @@ def get_first_failures(df):
 
 
 def pd_get_train_test_data(file_path):
-    columns = ['tr_build_id', 'gh_team_size', 'git_diff_src_churn', 'git_diff_test_churn', 'gh_diff_files_modified', 'tr_status']
+    columns = ['tr_build_id', 'git_num_all_built_commits', 'git_diff_src_churn', 'git_diff_test_churn', 'gh_diff_files_modified', 'tr_status']
     X = pd.read_csv(file_path, usecols = columns)
     X['tr_status'] = output_values(X['tr_status'])
     #Y = X['tr_status']
@@ -265,8 +265,8 @@ def sbs(project_name):
     forest = RandomForestClassifier(n_estimators=int(n_estimator), max_depth=int(max_depth))
     forest.fit(best_f1_sample, best_f1_sample_result)
 
-    file_name = 'dump_data/rq2_' + project_name + '_best_model.pkl'
-    dump_file = open(file_name, 'wb')
+    file_name = 'rq2_dump_data/rq2_' + project_name + '_gfm_best_model.pkl'
+    #dump_file = open(file_name, 'wb')
     pickle.dump(forest, dump_file)
     pickle.dump(threshold, dump_file)
     pickle.dump(n_estimator, dump_file)
@@ -342,12 +342,15 @@ def static_rule(p):
     global batch_total
     global batch_durations
     
+    result_file = open('gfm_all_ssr_results.csv', 'a+')
+    writer = csv.writer(result_file)
+    
     p = p.split('.')[0]
 
     
     #predictor, threshold = sbs(p)
 
-    model_file_name = 'rq2_dump_data/rq2_' + p + '_best_model.pkl'
+    model_file_name = 'rq2_dump_data/rq2_' + p + '_gfm_best_model.pkl'
     model_file = open(model_file_name, 'rb')
     predictor = pickle.load(model_file)
     threshold = pickle.load(model_file)
@@ -400,8 +403,9 @@ def static_rule(p):
             project_batch_delays = []
 
             print('Processing {}'.format(p))
+            commit = predictor.predict(X_test)
             for c in confidence:
-                
+
                 batch_delays = 0
 
                 pass_streak = Y_test[0]
@@ -419,10 +423,9 @@ def static_rule(p):
                     saved_builds = 1
 
                 index = 1
+
                 while index < len(X_test):
-                    commit = X_test.iloc[index]
-                    #predict = predictor.predict_proba([commit])
-                    value = predictor.predict([commit])
+                    value = commit[index]
                     #we're setting a confidence of 'c' builds on SBS, if more than 'c' passes have been suggested in a row, we don't want to trust sbs
                     
                     #if predict[0][1] > threshold:
@@ -453,6 +456,7 @@ def static_rule(p):
                                             batch_delays += len(actual_group_results) - fb
                                             fb += 1
                                             index += 1
+                                            total_builds += 1
                                     else:
                                         if len(miss_indexes) > 0:
                                             if miss_indexes[-1] < index:
@@ -475,7 +479,7 @@ def static_rule(p):
                                     if len(actual_group_results) != max_batch_size:
                                         fb = 0
                                         while fb < len(actual_group_results):
-                                            #miss_indexes.append(index)
+                                            total_builds += 1
                                             batch_delays += len(actual_group_results) - fb
                                             fb += 1
                                             index += 1
@@ -500,7 +504,7 @@ def static_rule(p):
                                     if len(actual_group_results) != max_batch_size:
                                         fb = 0
                                         while fb < len(actual_group_results):
-                                            #miss_indexes.append(index)
+                                            total_builds += 1
                                             batch_delays += len(actual_group_results) - fb
                                             fb += 1
                                             index += 1
@@ -590,7 +594,7 @@ def static_rule(p):
                                 if len(actual_group_results) != max_batch_size:
                                     fb = 0
                                     while fb < len(actual_group_results):
-                                        #miss_indexes.append(index)
+                                        total_builds += 1
                                         batch_delays += len(actual_group_results) - fb
                                         fb += 1
                                         index += 1
@@ -617,7 +621,7 @@ def static_rule(p):
                                 if len(actual_group_results) != max_batch_size:
                                     fb = 0
                                     while fb < len(actual_group_results):
-                                        #miss_indexes.append(index)
+                                        total_builds += 1
                                         batch_delays += len(actual_group_results) - fb
                                         fb += 1
                                         index += 1
@@ -649,7 +653,7 @@ def static_rule(p):
                                 if len(actual_group_results) != max_batch_size:
                                     fb = 0
                                     while fb < len(actual_group_results):
-                                        #miss_indexes.append(index)
+                                        total_builds += 1
                                         batch_delays += len(actual_group_results) - fb
                                         fb += 1
                                         index += 1
@@ -736,15 +740,17 @@ def static_rule(p):
             for i in range(len(confidence)):
                 print([p, alg, max_batch_size, confidence[i], 100*project_reqd_builds[i]/length_of_test, 100*project_missed_builds[i]/length_of_test, project_build_duration[i], 100*project_saved_builds[i]/length_of_test, project_delays[i], length_of_test, project_batch_delays[i]])
                 writer.writerow([p, alg, max_batch_size, confidence[i], 100*project_reqd_builds[i]/length_of_test, 100*project_missed_builds[i]/length_of_test, project_build_duration[i], 100*project_saved_builds[i]/length_of_test, project_delays[i], length_of_test, project_batch_delays[i]])
+    result_file.close()
 # In[ ]:
 
-for pr in projects[1:]:
-    static_rule(pr)
+#for pr in projects:
+#    static_rule(pr)
 #static_rule('sufia.csv')
 #static_rule('vagrant.csv')
-#if __name__ == '__main__':
-#    with multiprocess.Pool(5) as p:
-#        p.map(static_rule, projects[9:10])
+
+if __name__ == '__main__':
+    with multiprocess.Pool(5) as p:
+        p.map(static_rule, projects)
 
 
 
