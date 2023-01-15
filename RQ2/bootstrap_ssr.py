@@ -348,12 +348,12 @@ def static_rule(p):
     p = p.split('.')[0]
 
     
-    #predictor, threshold = sbs(p)
+    predictor, threshold = sbs(p)
 
-    model_file_name = 'rq2_dump_data/rq2_' + p + '_gfm_best_model.pkl'
-    model_file = open(model_file_name, 'rb')
-    predictor = pickle.load(model_file)
-    threshold = pickle.load(model_file)
+#     model_file_name = 'rq2_dump_data/rq2_' + p + '_best_model.pkl'
+#     model_file = open(model_file_name, 'rb')
+#     predictor = pickle.load(model_file)
+#     threshold = pickle.load(model_file)
     
     #get the test data
     
@@ -743,14 +743,16 @@ def static_rule(p):
     result_file.close()
 # In[ ]:
 
+
 #for pr in projects:
 #    static_rule(pr)
+# for pr in projects[1:]:
+#     static_rule(pr)
 #static_rule('sufia.csv')
 #static_rule('vagrant.csv')
-
-if __name__ == '__main__':
-    with multiprocess.Pool(5) as p:
-        p.map(static_rule, projects)
+#if __name__ == '__main__':
+#    with multiprocess.Pool(5) as p:
+#        p.map(static_rule, projects)
 
 
 

@@ -1,0 +1,153 @@
+project,algorithm,batch_size,sbs_delays,confidence
+cloud_controller_ng.csv,BATCH4,4,"[3, 5, 2, 14, 8, 4, 4, 2, 14, 4, 5, 2, 6, 7, 11, 13]",14
+cloud_controller_ng.csv,BATCHBISECT,2,"[2, 2, 3, 2, 3, 3, 3, 3, 2, 3, 2, 2, 2, 2, 3, 3]",3
+cloud_controller_ng.csv,BATCHBISECT,4,"[3, 5, 2, 14, 8, 4, 4, 2, 14, 4, 5, 2, 6, 7, 11, 13]",14
+cloud_controller_ng.csv,BATCHBISECT,8,"[3, 5, 8, 20, 4, 3, 3, 9]",20
+cloud_controller_ng.csv,BATCHBISECT,16,"[3, 3, 12, 18]",20
+cloud_controller_ng.csv,BATCHSTOP4,4,"[3, 5, 2, 14, 8, 4, 4, 2, 14, 4, 5, 2, 6, 7, 11, 13]",14
+cloud_controller_ng.csv,BATCHSTOP4,8,"[3, 5, 8, 20, 4, 3, 3, 9]",20
+cloud_controller_ng.csv,BATCHSTOP4,16,"[3, 3, 12, 18]",20
+cloudify.csv,BATCH4,4,"[9, 2, 18, 7, 4, 14, 10, 13]",19
+cloudify.csv,BATCHBISECT,2,"[2, 7, 2, 6, 2, 11, 13, 2, 8, 2, 5, 2, 4, 9, 11]",15
+cloudify.csv,BATCHBISECT,4,"[9, 2, 18, 7, 4, 14, 10, 13]",19
+cloudify.csv,BATCHBISECT,8,"[2, 7, 12, 6, 10, 10, 6, 14]",20
+cloudify.csv,BATCHBISECT,16,"[8, 13, 8, 12, 10, 19, 15, 4, 6, 9, 14]",19
+cloudify.csv,BATCHSTOP4,4,"[9, 2, 18, 7, 4, 14, 10, 13]",19
+cloudify.csv,BATCHSTOP4,8,"[2, 7, 12, 6, 10, 10, 6, 14]",20
+cloudify.csv,BATCHSTOP4,16,"[8, 13, 8, 12, 10, 19, 15, 4, 6, 9, 14]",19
+concerto.csv,BATCH4,4,"[8, 11, 10, 8, 6, 8, 4, 2, 12, 7]",12
+concerto.csv,BATCHBISECT,2,"[3, 3, 3]",4
+concerto.csv,BATCHBISECT,4,"[8, 11, 10, 8, 6, 8, 4, 2, 12, 7]",12
+concerto.csv,BATCHBISECT,8,"[16, 19, 3, 4, 4, 14, 2]",20
+concerto.csv,BATCHBISECT,16,"[11, 14, 7, 8, 11, 6, 15, 7]",15
+concerto.csv,BATCHSTOP4,4,"[8, 11, 10, 8, 6, 8, 4, 2, 12, 7]",12
+concerto.csv,BATCHSTOP4,8,"[16, 19, 3, 4, 4, 14, 2]",20
+concerto.csv,BATCHSTOP4,16,"[11, 14, 7, 8, 11, 6, 15, 7]",15
+fog.csv,BATCH4,4,"[3, 7, 3, 8, 6, 7, 4, 6, 2, 7, 2, 5, 9]",10
+fog.csv,BATCHBISECT,2,"[2, 2, 2, 2, 3, 3, 2, 2, 3, 3, 2, 3, 2, 3, 3]",3
+fog.csv,BATCHBISECT,4,"[3, 7, 3, 8, 6, 7, 4, 6, 2, 7, 2, 5, 9]",10
+fog.csv,BATCHBISECT,8,"[10, 14, 3, 8, 4, 10, 5, 3, 7, 10, 13, 15, 16, 7]",19
+fog.csv,BATCHBISECT,16,"[10, 14, 2, 4, 7, 9, 11, 16, 12, 18, 5]",19
+fog.csv,BATCHSTOP4,4,"[3, 7, 3, 8, 6, 7, 4, 6, 2, 7, 2, 5, 9]",10
+fog.csv,BATCHSTOP4,8,"[10, 14, 3, 8, 4, 10, 5, 3, 7, 10, 13, 15, 16, 7]",19
+fog.csv,BATCHSTOP4,16,"[10, 14, 2, 4, 7, 9, 11, 16, 12, 18, 5]",19
+geoserver.csv,BATCH4,4,"[5, 7, 2, 2, 6, 2, 4, 2, 4, 6]",7
+geoserver.csv,BATCHBISECT,2,"[3, 2, 2, 2, 3, 3, 3, 3, 2, 3, 2, 3]",3
+geoserver.csv,BATCHBISECT,4,"[5, 7, 2, 2, 6, 2, 4, 2, 4, 6]",7
+geoserver.csv,BATCHBISECT,8,"[2, 4, 9, 11, 2, 5, 5, 9]",11
+geoserver.csv,BATCHBISECT,16,"[3, 5, 10, 12]",12
+geoserver.csv,BATCHSTOP4,4,"[5, 7, 2, 2, 6, 2, 4, 2, 4, 6]",7
+geoserver.csv,BATCHSTOP4,8,"[2, 4, 9, 11, 2, 5, 5, 9]",11
+geoserver.csv,BATCHSTOP4,16,"[3, 5, 10, 12]",12
+gradle.csv,BATCH4,4,"[5, 9, 12, 5, 4, 7, 14, 11, 14, 5, 10, 5, 11, 2, 15, 9]",18
+gradle.csv,BATCHBISECT,2,"[4, 6, 5, 5, 4, 3, 4, 5, 3, 5, 3, 4, 6, 6]",7
+gradle.csv,BATCHBISECT,4,"[5, 9, 12, 5, 4, 7, 14, 11, 14, 5, 10, 5, 11, 2, 15, 9]",18
+gradle.csv,BATCHBISECT,8,"[4, 5, 9, 18, 7, 17, 3, 18, 16, 4, 17, 24]",19
+gradle.csv,BATCHBISECT,16,"[5, 2, 6, 17, 15, 3]",20
+gradle.csv,BATCHSTOP4,4,"[5, 9, 12, 5, 4, 7, 14, 11, 14, 5, 10, 5, 11, 2, 15, 9]",18
+gradle.csv,BATCHSTOP4,8,"[4, 5, 9, 18, 7, 17, 3, 18, 16, 4, 17, 24]",19
+gradle.csv,BATCHSTOP4,16,"[5, 2, 6, 17, 15, 3]",20
+graylog2-server.csv,BATCH4,4,"[11, 6, 7, 7, 3, 2]",17
+graylog2-server.csv,BATCHBISECT,2,"[13, 6, 7, 7, 3, 2]",19
+graylog2-server.csv,BATCHBISECT,4,"[11, 6, 7, 7, 3, 2]",17
+graylog2-server.csv,BATCHBISECT,8,"[2, 10, 15, 22]",20
+graylog2-server.csv,BATCHBISECT,16,"[11, 19, 13, 3, 22]",19
+graylog2-server.csv,BATCHSTOP4,4,"[11, 6, 7, 7, 3, 2]",17
+graylog2-server.csv,BATCHSTOP4,8,"[2, 10, 15, 22]",20
+graylog2-server.csv,BATCHSTOP4,16,"[11, 19, 13, 3, 22]",19
+jruby.csv,BATCH4,4,"[6, 2, 2, 8, 5, 5, 4, 5, 8, 3, 5, 4, 2, 3, 2, 7, 3, 5, 9, 2, 6, 8, 3, 7, 5]",9
+jruby.csv,BATCHBISECT,2,"[2, 2, 3, 2, 2, 2, 3, 2, 2, 2, 3, 3, 3, 2, 2, 3, 2, 3, 3, 2, 3, 2, 2, 3, 3, 2]",3
+jruby.csv,BATCHBISECT,4,"[6, 2, 2, 8, 5, 5, 4, 5, 8, 3, 5, 4, 2, 3, 2, 7, 3, 5, 9, 2, 6, 8, 3, 7, 5]",9
+jruby.csv,BATCHBISECT,8,"[2, 4, 12, 12, 14, 2, 7, 10, 13, 15, 3]",19
+jruby.csv,BATCHBISECT,16,"[5, 11, 4, 12]",12
+jruby.csv,BATCHSTOP4,4,"[6, 2, 2, 8, 5, 5, 4, 5, 8, 3, 5, 4, 2, 3, 2, 7, 3, 5, 9, 2, 6, 8, 3, 7, 5]",9
+jruby.csv,BATCHSTOP4,8,"[2, 4, 12, 12, 14, 2, 7, 10, 13, 15, 3]",19
+jruby.csv,BATCHSTOP4,16,"[5, 11, 4, 12]",12
+loomio.csv,BATCH4,4,"[2, 4, 5, 7, 7, 4, 2]",7
+loomio.csv,BATCHBISECT,2,"[3, 2, 3, 4, 2, 4, 3, 3, 4]",4
+loomio.csv,BATCHBISECT,4,"[2, 4, 5, 7, 7, 4, 2]",7
+loomio.csv,BATCHBISECT,8,"[13, 5, 7, 5, 9, 11, 4, 17]",19
+loomio.csv,BATCHBISECT,16,"[9, 9, 11]",15
+loomio.csv,BATCHSTOP4,4,"[2, 4, 5, 7, 7, 4, 2]",7
+loomio.csv,BATCHSTOP4,8,"[13, 5, 7, 5, 9, 11, 4, 17]",19
+loomio.csv,BATCHSTOP4,16,"[9, 9, 11]",15
+metasploit-framework.csv,BATCH4,4,"[2, 4, 5, 7, 2, 2, 17, 5, 14, 9, 3, 15, 6, 2, 5, 12, 7, 16, 3]",17
+metasploit-framework.csv,BATCHBISECT,2,"[5, 2, 4, 2, 6, 5, 3, 3, 2, 2, 2, 2, 6, 3, 4, 5, 2]",6
+metasploit-framework.csv,BATCHBISECT,4,"[2, 4, 5, 7, 2, 2, 17, 5, 14, 9, 3, 15, 6, 2, 5, 12, 7, 16, 3]",17
+metasploit-framework.csv,BATCHBISECT,8,"[19, 6, 8, 10, 2, 5, 20, 8, 18, 5, 13, 3, 6, 9, 16, 5, 7, 16]",20
+metasploit-framework.csv,BATCHBISECT,16,"[9, 4, 13, 18, 10, 11, 17, 13, 19, 16]",20
+metasploit-framework.csv,BATCHSTOP4,4,"[2, 4, 5, 7, 2, 2, 17, 5, 14, 9, 3, 15, 6, 2, 5, 12, 7, 16, 3]",17
+metasploit-framework.csv,BATCHSTOP4,8,"[19, 6, 8, 10, 2, 5, 20, 8, 18, 5, 13, 3, 6, 9, 16, 5, 7, 16]",20
+metasploit-framework.csv,BATCHSTOP4,16,"[9, 4, 13, 18, 10, 11, 17, 13, 19, 16]",20
+opal.csv,BATCH4,4,"[4, 2, 7, 13, 4, 7, 5]",13
+opal.csv,BATCHBISECT,2,"[4, 4, 6, 3]",6
+opal.csv,BATCHBISECT,4,"[4, 2, 7, 13, 4, 7, 5]",13
+opal.csv,BATCHBISECT,8,"[7, 10, 12, 4, 5, 15, 4]",16
+opal.csv,BATCHBISECT,16,"[9, 9, 16, 18, 5, 16]",18
+opal.csv,BATCHSTOP4,4,"[4, 2, 7, 13, 4, 7, 5]",13
+opal.csv,BATCHSTOP4,8,"[7, 10, 12, 4, 5, 15, 4]",16
+opal.csv,BATCHSTOP4,16,"[9, 9, 16, 18, 5, 16]",18
+open-build-service.csv,BATCH4,4,"[2, 7, 5, 4, 9, 6, 6, 7, 9, 3, 10, 5, 3, 8, 10, 6, 8, 10, 4, 2, 4, 10, 5, 7]",10
+open-build-service.csv,BATCHBISECT,2,"[3, 3, 2, 3, 3, 3, 2, 3, 3, 2, 3, 2, 3, 3, 3, 2, 2, 3]",3
+open-build-service.csv,BATCHBISECT,4,"[2, 7, 5, 4, 9, 6, 6, 7, 9, 3, 10, 5, 3, 8, 10, 6, 8, 10, 4, 2, 4, 10, 5, 7]",10
+open-build-service.csv,BATCHBISECT,8,"[5, 8, 4, 9, 3, 16, 7, 10, 5, 12, 12, 18, 8, 11, 15, 19, 7, 2, 5, 7, 5, 7]",20
+open-build-service.csv,BATCHBISECT,16,"[4, 3, 10, 2, 5, 7]",16
+open-build-service.csv,BATCHSTOP4,4,"[2, 7, 5, 4, 9, 6, 6, 7, 9, 3, 10, 5, 3, 8, 10, 6, 8, 10, 4, 2, 4, 10, 5, 7]",10
+open-build-service.csv,BATCHSTOP4,8,"[5, 8, 4, 9, 3, 16, 7, 10, 5, 12, 12, 18, 8, 11, 15, 19, 7, 2, 5, 7, 5, 7]",20
+open-build-service.csv,BATCHSTOP4,16,"[4, 3, 10, 2, 5, 7]",16
+orbeon-forms.csv,BATCH4,4,"[8, 10, 10, 6, 8, 2, 5, 4, 7, 7, 9, 3]",12
+orbeon-forms.csv,BATCHBISECT,2,"[4, 3, 2, 3, 4, 6, 3, 2, 4, 3]",6
+orbeon-forms.csv,BATCHBISECT,4,"[8, 10, 10, 6, 8, 2, 5, 4, 7, 7, 9, 3]",12
+orbeon-forms.csv,BATCHBISECT,8,"[3, 12, 4, 6, 16, 8, 11, 4, 6, 12, 14, 12]",16
+orbeon-forms.csv,BATCHBISECT,16,[4],19
+orbeon-forms.csv,BATCHSTOP4,4,"[8, 10, 10, 6, 8, 2, 5, 4, 7, 7, 9, 3]",12
+orbeon-forms.csv,BATCHSTOP4,8,"[3, 12, 4, 6, 16, 8, 11, 4, 6, 12, 14, 12]",16
+orbeon-forms.csv,BATCHSTOP4,16,[4],19
+puppet.csv,BATCH4,4,"[2, 4]",16
+puppet.csv,BATCHBISECT,2,"[2, 4]",17
+puppet.csv,BATCHBISECT,4,"[2, 4]",16
+puppet.csv,BATCHBISECT,8,"[10, 12]",18
+puppet.csv,BATCHBISECT,16,[],19
+puppet.csv,BATCHSTOP4,4,"[2, 4]",16
+puppet.csv,BATCHSTOP4,8,"[10, 12]",18
+puppet.csv,BATCHSTOP4,16,[],19
+rails.csv,BATCH4,4,"[8, 11, 4, 5, 4, 9, 11, 6, 4, 6, 10, 4, 9, 11, 8, 2, 4, 6, 8, 6, 11, 6, 4, 9, 2, 3, 5, 2, 8, 8, 4, 4, 11, 3, 2, 3, 2, 7, 11, 4, 2, 7, 10, 3, 3, 7, 4, 2, 5, 7, 2, 7, 9, 3, 3, 7, 2, 8, 7, 7, 9, 4, 5, 9, 9, 2, 4, 2, 4, 8, 3, 6, 9, 10, 6, 4, 9, 2]",11
+rails.csv,BATCHBISECT,2,"[3, 3, 2, 2, 2, 3, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 2, 3, 2, 3, 2, 3, 3, 3, 2, 2, 3, 2, 2, 3, 2, 2, 3, 3, 3, 3, 2, 3, 3, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 3, 3, 3, 2, 3, 3, 3, 3, 2, 2, 2, 3, 2, 3, 3, 2, 3, 2, 2, 2]",3
+rails.csv,BATCHBISECT,4,"[8, 11, 4, 5, 4, 9, 11, 6, 4, 6, 10, 4, 9, 11, 8, 2, 4, 6, 8, 6, 11, 6, 4, 9, 2, 3, 5, 2, 8, 8, 4, 4, 11, 3, 2, 3, 2, 7, 11, 4, 2, 7, 10, 3, 3, 7, 4, 2, 5, 7, 2, 7, 9, 3, 3, 7, 2, 8, 7, 7, 9, 4, 5, 9, 9, 2, 4, 2, 4, 8, 3, 6, 9, 10, 6, 4, 9, 2]",11
+rails.csv,BATCHBISECT,8,"[4, 10, 17, 20, 5, 12, 2, 7, 9, 17, 3, 13, 18, 20, 2, 10, 12, 15, 8, 11, 15, 17, 20, 4, 2, 5, 19, 15, 17, 7, 16, 15, 4, 19, 12, 16, 18, 7, 2, 4, 8, 10, 14, 16, 19, 7, 15, 3, 7, 11, 17, 2, 9, 12, 14, 2, 12, 17, 4, 6, 10, 11, 16, 20, 14, 5, 11, 17, 6, 20, 2, 4, 6, 18, 20, 3, 6, 11]",20
+rails.csv,BATCHBISECT,16,"[4, 10, 17, 20, 10, 2, 17, 5, 4, 18, 4, 2, 14, 20, 3, 6]",20
+rails.csv,BATCHSTOP4,4,0,0
+rails.csv,BATCHSTOP4,8,0,0
+rails.csv,BATCHSTOP4,16,0,0
+rubinius.csv,BATCH4,4,"[3, 4, 2, 6, 2, 4, 5]",8
+rubinius.csv,BATCHBISECT,2,"[3, 3, 2, 4, 2, 6, 2, 3, 5, 3, 5, 2, 6, 3, 4]",6
+rubinius.csv,BATCHBISECT,4,"[3, 4, 2, 6, 2, 4, 5]",8
+rubinius.csv,BATCHBISECT,8,"[3, 2, 6, 10, 13, 8]",18
+rubinius.csv,BATCHBISECT,16,[],2
+rubinius.csv,BATCHSTOP4,4,"[3, 4, 2, 6, 2, 4, 5]",8
+rubinius.csv,BATCHSTOP4,8,"[3, 2, 6, 10, 13, 8]",18
+rubinius.csv,BATCHSTOP4,16,[],2
+sonarqube.csv,BATCH4,4,"[3, 7, 9, 7, 5, 11, 3, 7, 3, 8, 3, 11, 5, 10]",12
+sonarqube.csv,BATCHBISECT,2,"[3, 2, 3, 3, 4, 5, 2, 3, 4, 2, 5, 3, 4]",5
+sonarqube.csv,BATCHBISECT,4,"[3, 7, 9, 7, 5, 11, 3, 7, 3, 8, 3, 11, 5, 10]",12
+sonarqube.csv,BATCHBISECT,8,"[3, 2, 14, 8, 5, 15, 2, 10, 18]",18
+sonarqube.csv,BATCHBISECT,16,"[3, 10, 14, 7, 11, 5, 16]",18
+sonarqube.csv,BATCHSTOP4,4,"[3, 7, 9, 7, 5, 11, 3, 7, 3, 8, 3, 11, 5, 10]",12
+sonarqube.csv,BATCHSTOP4,8,"[3, 2, 14, 8, 5, 15, 2, 10, 18]",18
+sonarqube.csv,BATCHSTOP4,16,"[3, 10, 14, 7, 11, 5, 16]",18
+sufia.csv,BATCH4,4,[6],19
+sufia.csv,BATCHBISECT,2,[6],19
+sufia.csv,BATCHBISECT,4,[6],19
+sufia.csv,BATCHBISECT,8,[6],19
+sufia.csv,BATCHBISECT,16,[6],19
+sufia.csv,BATCHSTOP4,4,[6],19
+sufia.csv,BATCHSTOP4,8,[6],19
+sufia.csv,BATCHSTOP4,16,[6],19
+vagrant.csv,BATCH4,4,"[9, 7, 6, 15]",17
+vagrant.csv,BATCHBISECT,2,"[3, 6, 8, 7, 4, 5, 4]",12
+vagrant.csv,BATCHBISECT,4,"[9, 7, 6, 15]",17
+vagrant.csv,BATCHBISECT,8,"[12, 2, 2, 2, 13, 12]",20
+vagrant.csv,BATCHBISECT,16,"[7, 7, 9, 15, 15]",20
+vagrant.csv,BATCHSTOP4,4,"[9, 7, 6, 15]",17
+vagrant.csv,BATCHSTOP4,8,"[12, 2, 2, 2, 13, 12]",20
+vagrant.csv,BATCHSTOP4,16,"[7, 7, 9, 15, 15]",20
