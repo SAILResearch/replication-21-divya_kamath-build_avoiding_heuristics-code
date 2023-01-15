@@ -428,7 +428,7 @@ def validation():
 						delay_indexes.append(i)
 
 			
-			from_value = 0
+			'''from_value = 0
 			delay = []
 			for k in range(len(built_indexes)):
 				for j in range(len(delay_indexes)):
@@ -440,8 +440,28 @@ def validation():
 
 			for j in range(len(delay_indexes)):
 				if delay_indexes[j] > from_value and delay_indexes[j] < final_index:
-					delay.append(final_index - delay_indexes[j])
+					delay.append(final_index - delay_indexes[j])'''
 
+			bp = 0
+			mp = 0
+			temp_delay = 0
+
+			while bp < len(built_indexes):
+				while mp < len(delay_indexes) and delay_indexes[mp] < built_indexes[bp]:
+					temp_delay = built_indexes[bp] - delay_indexes[mp]
+					print("Difference: {}, Built_index = {} , Missed_index = {}".format(temp_delay, built_indexes[bp], delay_indexes[mp]))
+                	total_delay += temp_delay
+                	mp += 1
+                bp += 1
+
+			while mp < len(delay_indexes):
+				temp_delay = length - delay_indexes[mp]
+				print("Difference: {}, Built_index = {} , Missed_index = {}".format(temp_delay, length, delay_indexes[mp]))
+				total_delay += temp_delay
+				mp += 1
+
+
+			delay = [total_delay]
 
 
 			print('saved_builds for {} is {}'.format(project, saved_builds))
