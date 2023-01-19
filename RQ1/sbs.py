@@ -325,14 +325,14 @@ project_names=['rails.csv', 'jruby.csv', 'metasploit-framework.csv', 'vagrant.cs
 
 new_projects = ['rubinius.csv', 'gradle.csv', 'loomio.csv', 'fog.csv', 'concerto.csv', 'sufia.csv', 'geoserver.csv', 'orbeon-forms.csv', 'graylog2-server.csv', 'puppet.csv', 'cloud_controller_ng.csv', 'rails.csv']
 
-jobs = []
-for p_name in project_names:
-	q = multiprocess.Process(target=with_cv_val, args=(p_name,))
-	jobs.append(q)
-	q.start()
+# jobs = []
+# for p_name in project_names:
+# 	q = multiprocess.Process(target=with_cv_val, args=(p_name,))
+# 	jobs.append(q)
+# 	q.start()
 
-for j in jobs:
-    j.join()
+# for j in jobs:
+#     j.join()
 
 
 
@@ -376,7 +376,7 @@ def validation():
 			res_writer = csv.writer(result_file)
 			res_writer.writerow(res_headers)
 
-			file_name = './' + project.split('.')[0] + '_200_metrics.csv'
+			file_name = './final_sbs_results/' + project.split('.')[0] + '_200_metrics.csv'
 
 			csv_file = pd.read_csv(file_name)
 
@@ -445,18 +445,19 @@ def validation():
 			bp = 0
 			mp = 0
 			temp_delay = 0
+			total_delay = 0
 
 			while bp < len(built_indexes):
 				while mp < len(delay_indexes) and delay_indexes[mp] < built_indexes[bp]:
 					temp_delay = built_indexes[bp] - delay_indexes[mp]
 					print("Difference: {}, Built_index = {} , Missed_index = {}".format(temp_delay, built_indexes[bp], delay_indexes[mp]))
-                	total_delay += temp_delay
-                	mp += 1
-                bp += 1
+					total_delay += temp_delay
+					mp += 1
+				bp += 1
 
 			while mp < len(delay_indexes):
-				temp_delay = length - delay_indexes[mp]
-				print("Difference: {}, Built_index = {} , Missed_index = {}".format(temp_delay, length, delay_indexes[mp]))
+				temp_delay = total_builds - delay_indexes[mp]
+				print("Difference: {}, Built_index = {} , Missed_index = {}".format(temp_delay, total_builds, delay_indexes[mp]))
 				total_delay += temp_delay
 				mp += 1
 

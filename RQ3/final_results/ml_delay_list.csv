@@ -1,0 +1,153 @@
+,project,alg,batch_size,delay_list,median_delay
+0,cloud_controller_ng,BATCH4,4,"[1, 2]",1.5
+1,cloudify,BATCH4,4,"[6, 4]",5.0
+2,concerto,BATCH4,4,"[1, 4, 1]",1.0
+3,fog,BATCH4,4,[1],1.0
+4,geoserver,BATCH4,4,[0],0.0
+5,gradle,BATCH4,4,"[1, 1, 6]",1.0
+6,graylog2-server,BATCH4,4,[0],0.0
+7,jruby,BATCH4,4,"[2, 2, 1]",2.0
+8,loomio,BATCH4,4,[0],0.0
+9,metasploit-framework,BATCH4,4,[0],0.0
+10,opal,BATCH4,4,[0],0.0
+11,open-build-service,BATCH4,4,"[1, 3, 1, 1, 1]",1.0
+12,orbeon-forms,BATCH4,4,[0],0.0
+13,puppet,BATCH4,4,[0],0.0
+14,rails,BATCH4,4,"[1, 3, 1, 1, 1, 1, 1, 2]",1.0
+15,rubinius,BATCH4,4,[2],2.0
+16,sonarqube,BATCH4,4,[1],1.0
+17,sufia,BATCH4,4,[0],0.0
+18,vagrant,BATCH4,4,[1],1.0
+19,cloud_controller_ng,BATCHBISECT,2,"[1, 3, 2, 1, 1, 1, 2]",1.0
+20,cloudify,BATCHBISECT,2,"[1, 2]",1.5
+21,concerto,BATCHBISECT,2,"[1, 7, 1, 4, 1, 1]",1.0
+22,fog,BATCHBISECT,2,"[1, 1, 1, 3, 1, 1]",1.0
+23,geoserver,BATCHBISECT,2,"[1, 3, 2, 1]",1.5
+24,gradle,BATCHBISECT,2,"[5, 2, 1, 5, 2, 6, 1, 2]",2.0
+25,graylog2-server,BATCHBISECT,2,"[2, 1]",1.5
+26,jruby,BATCHBISECT,2,"[2, 1, 1, 1, 1, 2, 1, 1]",1.0
+27,loomio,BATCHBISECT,2,"[1, 2]",1.5
+28,metasploit-framework,BATCHBISECT,2,"[1, 1]",1.0
+29,opal,BATCHBISECT,2,[1],1.0
+30,open-build-service,BATCHBISECT,2,"[1, 3, 1, 1, 1, 1, 1]",1.0
+31,orbeon-forms,BATCHBISECT,2,[0],0.0
+32,puppet,BATCHBISECT,2,[1],1.0
+33,rails,BATCHBISECT,2,"[1, 1, 1, 1, 1, 2, 3, 1, 2, 1, 2, 6, 1, 1, 1, 2, 1, 1, 3, 1, 1, 1, 2]",1.0
+34,rubinius,BATCHBISECT,2,[2],2.0
+35,sonarqube,BATCHBISECT,2,"[1, 1, 1, 1]",1.0
+36,sufia,BATCHBISECT,2,[0],0.0
+37,vagrant,BATCHBISECT,2,"[2, 1]",1.5
+38,cloud_controller_ng,BATCHBISECT,4,"[1, 2]",1.5
+39,cloudify,BATCHBISECT,4,"[6, 4]",5.0
+40,concerto,BATCHBISECT,4,"[1, 4, 1]",1.0
+41,fog,BATCHBISECT,4,[1],1.0
+42,geoserver,BATCHBISECT,4,[0],0.0
+43,gradle,BATCHBISECT,4,"[1, 1, 6]",1.0
+44,graylog2-server,BATCHBISECT,4,[0],0.0
+45,jruby,BATCHBISECT,4,"[2, 2, 1]",2.0
+46,loomio,BATCHBISECT,4,[0],0.0
+47,metasploit-framework,BATCHBISECT,4,[0],0.0
+48,opal,BATCHBISECT,4,[0],0.0
+49,open-build-service,BATCHBISECT,4,"[1, 3, 1, 1, 1]",1.0
+50,orbeon-forms,BATCHBISECT,4,[0],0.0
+51,puppet,BATCHBISECT,4,[0],0.0
+52,rails,BATCHBISECT,4,"[1, 3, 1, 1, 1, 1, 1, 2]",1.0
+53,rubinius,BATCHBISECT,4,[2],2.0
+54,sonarqube,BATCHBISECT,4,[1],1.0
+55,sufia,BATCHBISECT,4,[0],0.0
+56,vagrant,BATCHBISECT,4,[1],1.0
+57,cloud_controller_ng,BATCHBISECT,8,[3],3.0
+58,cloudify,BATCHBISECT,8,[0],0.0
+59,concerto,BATCHBISECT,8,[1],1.0
+60,fog,BATCHBISECT,8,[1],1.0
+61,geoserver,BATCHBISECT,8,[0],0.0
+62,gradle,BATCHBISECT,8,[0],0.0
+63,graylog2-server,BATCHBISECT,8,[0],0.0
+64,jruby,BATCHBISECT,8,[0],0.0
+65,loomio,BATCHBISECT,8,[0],0.0
+66,metasploit-framework,BATCHBISECT,8,[1],1.0
+67,opal,BATCHBISECT,8,[0],0.0
+68,open-build-service,BATCHBISECT,8,[0],0.0
+69,orbeon-forms,BATCHBISECT,8,[0],0.0
+70,puppet,BATCHBISECT,8,[1],1.0
+71,rails,BATCHBISECT,8,"[3, 1]",2.0
+72,rubinius,BATCHBISECT,8,[0],0.0
+73,sonarqube,BATCHBISECT,8,"[1, 1]",1.0
+74,sufia,BATCHBISECT,8,[0],0.0
+75,vagrant,BATCHBISECT,8,[0],0.0
+76,cloud_controller_ng,BATCHBISECT,16,[0],0.0
+77,cloudify,BATCHBISECT,16,[0],0.0
+78,concerto,BATCHBISECT,16,[0],0.0
+79,fog,BATCHBISECT,16,[1],1.0
+80,geoserver,BATCHBISECT,16,[0],0.0
+81,gradle,BATCHBISECT,16,[1],1.0
+82,graylog2-server,BATCHBISECT,16,[0],0.0
+83,jruby,BATCHBISECT,16,[0],0.0
+84,loomio,BATCHBISECT,16,[0],0.0
+85,metasploit-framework,BATCHBISECT,16,[0],0.0
+86,opal,BATCHBISECT,16,[1],1.0
+87,open-build-service,BATCHBISECT,16,[0],0.0
+88,orbeon-forms,BATCHBISECT,16,[0],0.0
+89,puppet,BATCHBISECT,16,[1],1.0
+90,rails,BATCHBISECT,16,"[1, 1]",1.0
+91,rubinius,BATCHBISECT,16,[0],0.0
+92,sonarqube,BATCHBISECT,16,[1],1.0
+93,sufia,BATCHBISECT,16,[0],0.0
+94,vagrant,BATCHBISECT,16,[0],0.0
+95,cloud_controller_ng,BATCHSTOP4,4,"[1, 2]",1.5
+96,cloudify,BATCHSTOP4,4,"[6, 4]",5.0
+97,concerto,BATCHSTOP4,4,"[1, 4, 1]",1.0
+98,fog,BATCHSTOP4,4,[1],1.0
+99,geoserver,BATCHSTOP4,4,[0],0.0
+100,gradle,BATCHSTOP4,4,"[1, 1, 6]",1.0
+101,graylog2-server,BATCHSTOP4,4,[0],0.0
+102,jruby,BATCHSTOP4,4,"[2, 2, 1]",2.0
+103,loomio,BATCHSTOP4,4,[0],0.0
+104,metasploit-framework,BATCHSTOP4,4,[0],0.0
+105,opal,BATCHSTOP4,4,[0],0.0
+106,open-build-service,BATCHSTOP4,4,"[1, 3, 1, 1, 1]",1.0
+107,orbeon-forms,BATCHSTOP4,4,[0],0.0
+108,puppet,BATCHSTOP4,4,[0],0.0
+109,rails,BATCHSTOP4,4,"[1, 3, 1, 1, 1, 1, 1, 2]",1.0
+110,rubinius,BATCHSTOP4,4,[2],2.0
+111,sonarqube,BATCHSTOP4,4,[1],1.0
+112,sufia,BATCHSTOP4,4,[0],0.0
+113,vagrant,BATCHSTOP4,4,[1],1.0
+114,cloud_controller_ng,BATCHSTOP4,8,[3],3.0
+115,cloudify,BATCHSTOP4,8,[0],0.0
+116,concerto,BATCHSTOP4,8,[1],1.0
+117,fog,BATCHSTOP4,8,[1],1.0
+118,geoserver,BATCHSTOP4,8,[0],0.0
+119,gradle,BATCHSTOP4,8,[0],0.0
+120,graylog2-server,BATCHSTOP4,8,[0],0.0
+121,jruby,BATCHSTOP4,8,[0],0.0
+122,loomio,BATCHSTOP4,8,[0],0.0
+123,metasploit-framework,BATCHSTOP4,8,[1],1.0
+124,opal,BATCHSTOP4,8,[0],0.0
+125,open-build-service,BATCHSTOP4,8,[0],0.0
+126,orbeon-forms,BATCHSTOP4,8,[0],0.0
+127,puppet,BATCHSTOP4,8,[1],1.0
+128,rails,BATCHSTOP4,8,"[3, 1]",2.0
+129,rubinius,BATCHSTOP4,8,[0],0.0
+130,sonarqube,BATCHSTOP4,8,"[1, 1]",1.0
+131,sufia,BATCHSTOP4,8,[0],0.0
+132,vagrant,BATCHSTOP4,8,[0],0.0
+133,cloud_controller_ng,BATCHSTOP4,16,[0],0.0
+134,cloudify,BATCHSTOP4,16,[0],0.0
+135,concerto,BATCHSTOP4,16,[0],0.0
+136,fog,BATCHSTOP4,16,[1],1.0
+137,geoserver,BATCHSTOP4,16,[0],0.0
+138,gradle,BATCHSTOP4,16,[1],1.0
+139,graylog2-server,BATCHSTOP4,16,[0],0.0
+140,jruby,BATCHSTOP4,16,[0],0.0
+141,loomio,BATCHSTOP4,16,[0],0.0
+142,metasploit-framework,BATCHSTOP4,16,[0],0.0
+143,opal,BATCHSTOP4,16,[1],1.0
+144,open-build-service,BATCHSTOP4,16,[0],0.0
+145,orbeon-forms,BATCHSTOP4,16,[0],0.0
+146,puppet,BATCHSTOP4,16,[1],1.0
+147,rails,BATCHSTOP4,16,"[1, 1]",1.0
+148,rubinius,BATCHSTOP4,16,[0],0.0
+149,sonarqube,BATCHSTOP4,16,[1],1.0
+150,sufia,BATCHSTOP4,16,[0],0.0
+151,vagrant,BATCHSTOP4,16,[0],0.0
