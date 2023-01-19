@@ -45,7 +45,7 @@ confidence = list(range(2,21,1))
 
 
 result_file = open('gfm_all_ssr_results.csv', 'w')
-result_headers = ['project', 'algorithm', 'batch_size', 'confidence', 'project_reqd_builds', 'project_missed_builds', 'project_build_duration', 'project_saved_builds', 'project_delays', 'testall_size', 'batch_delays']
+result_headers = ['project', 'algorithm', 'batch_size', 'confidence', 'project_reqd_builds', 'project_missed_builds', 'project_build_duration', 'project_saved_builds', 'project_delays', 'testall_size', 'batch_delays', 'batch_median', 'ci']
 writer = csv.writer(result_file)
 writer.writerow(result_headers)
 result_file.close()
@@ -348,12 +348,12 @@ def static_rule(p):
     p = p.split('.')[0]
 
     
-    predictor, threshold = sbs(p)
+    #predictor, threshold = sbs(p)
 
-#     model_file_name = 'rq2_dump_data/rq2_' + p + '_best_model.pkl'
-#     model_file = open(model_file_name, 'rb')
-#     predictor = pickle.load(model_file)
-#     threshold = pickle.load(model_file)
+    model_file_name = 'rq2_dump_data/rq2_' + p + '_gfm_best_model.pkl'
+    model_file = open(model_file_name, 'rb')
+    predictor = pickle.load(model_file)
+    threshold = pickle.load(model_file)
     
     #get the test data
     
@@ -401,11 +401,14 @@ def static_rule(p):
             project_delays = []
             project_bad_builds = []
             project_batch_delays = []
+            project_batch_medians = []
+            project_ci = []
 
             print('Processing {}'.format(p))
             commit = predictor.predict(X_test)
             for c in confidence:
-
+                ci = [Y_test[0]]
+                batch_median = []
                 batch_delays = 0
 
                 pass_streak = Y_test[0]
@@ -454,6 +457,8 @@ def static_rule(p):
                                         while fb < len(actual_group_results):
                                             #miss_indexes.append(index)
                                             batch_delays += len(actual_group_results) - fb
+                                            batch_median.append(max_batch_size-fb-1)
+                                            ci.append(0)
                                             fb += 1
                                             index += 1
                                             total_builds += 1
@@ -465,6 +470,8 @@ def static_rule(p):
                                                     delay_durations.append(index - e + 1)
 
                                         batch_delays += max_batch_size*(max_batch_size-1)/2
+                                        batch_median.extend([max_batch_size-clb-1 for clb in range(max_batch_size)])
+                                        ci.extend([0 for clb in range(max_batch_size)])
                                         total_builds += 1
                                         total_duration += max(group_duration)
 
@@ -480,7 +487,9 @@ def static_rule(p):
                                         fb = 0
                                         while fb < len(actual_group_results):
                                             total_builds += 1
+                                            ci.append(0)
                                             batch_delays += len(actual_group_results) - fb
+                                            batch_median.append(max_batch_size-fb-1)
                                             fb += 1
                                             index += 1
                                     else:
@@ -495,6 +504,8 @@ def static_rule(p):
 
                                         batch_bisect(grouped_batch, actual_group_results, group_duration)
                                         batch_delays += max_batch_size*(max_batch_size-1)/2
+                                        ci.extend([0 for clb in range(max_batch_size)])
+                                        batch_median.extend([max_batch_size-clb-1 for clb in range(max_batch_size)])
                                         total_builds += batch_total
                                         total_duration += batch_durations
 
@@ -505,7 +516,9 @@ def static_rule(p):
                                         fb = 0
                                         while fb < len(actual_group_results):
                                             total_builds += 1
+                                            ci.append(0)
                                             batch_delays += len(actual_group_results) - fb
+                                            batch_median.append(max_batch_size-fb-1)
                                             fb += 1
                                             index += 1
                                     else:
@@ -521,6 +534,8 @@ def static_rule(p):
                                         batch_stop_4(grouped_batch, actual_group_results, group_duration)
 
                                         batch_delays += max_batch_size*(max_batch_size-1)/2
+                                        ci.extend([0 for clb in range(max_batch_size)])
+                                        batch_median.extend([max_batch_size-clb-1 for clb in range(max_batch_size)])
                                         total_builds += batch_total
                                         total_duration += batch_durations
 
@@ -567,6 +582,7 @@ def static_rule(p):
 #                                         delay_durations.append(index - e + 1)
                         else:
                             pass_streak += 1
+                            ci.append(1)
                             saved_builds += 1
                             if Y_test[index] == 0:
                                 missed_builds += 1
@@ -595,7 +611,9 @@ def static_rule(p):
                                     fb = 0
                                     while fb < len(actual_group_results):
                                         total_builds += 1
+                                        ci.append(0)
                                         batch_delays += len(actual_group_results) - fb
+                                        batch_median.append(max_batch_size-fb-1)
                                         fb += 1
                                         index += 1
                                 else:
@@ -606,6 +624,8 @@ def static_rule(p):
                                                 delay_durations.append(index - e + 1)
                                     
                                     batch_delays += max_batch_size*(max_batch_size-1)/2
+                                    ci.extend([0 for clb in range(max_batch_size)])
+                                    batch_median.extend([max_batch_size-clb-1 for clb in range(max_batch_size)])
                                     total_builds += 1
                                     total_duration += max(group_duration)
 
@@ -622,7 +642,9 @@ def static_rule(p):
                                     fb = 0
                                     while fb < len(actual_group_results):
                                         total_builds += 1
+                                        ci.append(0)
                                         batch_delays += len(actual_group_results) - fb
+                                        batch_median.append(max_batch_size-fb-1)
                                         fb += 1
                                         index += 1
                                 else:
@@ -639,6 +661,9 @@ def static_rule(p):
                                     batch_bisect(grouped_batch, actual_group_results, group_duration)
 
                                     batch_delays += max_batch_size*(max_batch_size-1)/2
+                                    batch_median.extend([max_batch_size-clb-1 for clb in range(max_batch_size)])
+                                    
+                                    ci.extend([0 for clb in range(max_batch_size)])
                                     total_builds += batch_total
                                     total_duration += batch_durations
 
@@ -654,7 +679,9 @@ def static_rule(p):
                                     fb = 0
                                     while fb < len(actual_group_results):
                                         total_builds += 1
+                                        ci.append(0)
                                         batch_delays += len(actual_group_results) - fb
+                                        batch_median.append(max_batch_size-fb-1)
                                         fb += 1
                                         index += 1
                                 else:
@@ -671,6 +698,8 @@ def static_rule(p):
                                     batch_stop_4(grouped_batch, actual_group_results, group_duration)
 
                                     batch_delays += max_batch_size*(max_batch_size-1)/2
+                                    batch_median.extend([max_batch_size-clb-1 for clb in range(max_batch_size)])
+                                    ci.extend([0 for clb in range(max_batch_size)])
                                     total_builds += batch_total
                                     total_duration += batch_durations
 
@@ -715,12 +744,12 @@ def static_rule(p):
                         delay_durations.append(length_of_test - m_index + 1)
 
 
-                print('\tFor confidence {}:'.format(c))
+                '''print('\tFor confidence {}:'.format(c))
                 print('\t\tTotal builds needed : {}'.format(total_builds))
                 print('\t\tTotal number of missed builds : {}'.format(missed_builds))
                 print('\t\tTotal number of saved builds : {}'.format(saved_builds))
                 print('\t\tTotal duration of builds : {}'.format(total_duration))
-                print('\t\tTotal delays: {}'.format(delay_durations))
+                print('\t\tTotal delays: {}'.format(delay_durations))'''
 
                 project_reqd_builds.append(total_builds)
                 project_missed_builds.append(missed_builds)
@@ -728,6 +757,15 @@ def static_rule(p):
                 project_saved_builds.append(saved_builds)
                 project_delays.append(delay_durations)
                 project_batch_delays.append(batch_delays)
+                project_batch_medians.append(batch_median)
+                project_ci.append(ci)
+                
+                if len(ci) != len(commit):
+                    print(len(ci))
+                    print(len(commit))
+                    print('PROBLEM!')
+                else:
+                    print('NO PROBLEM!')
 
             #print(p)
             #print(project_reqd_builds)
@@ -738,14 +776,14 @@ def static_rule(p):
             #print(project_batch_delays)
             
             for i in range(len(confidence)):
-                print([p, alg, max_batch_size, confidence[i], 100*project_reqd_builds[i]/length_of_test, 100*project_missed_builds[i]/length_of_test, project_build_duration[i], 100*project_saved_builds[i]/length_of_test, project_delays[i], length_of_test, project_batch_delays[i]])
-                writer.writerow([p, alg, max_batch_size, confidence[i], 100*project_reqd_builds[i]/length_of_test, 100*project_missed_builds[i]/length_of_test, project_build_duration[i], 100*project_saved_builds[i]/length_of_test, project_delays[i], length_of_test, project_batch_delays[i]])
+                #print([p, alg, max_batch_size, confidence[i], 100*project_reqd_builds[i]/length_of_test, 100*project_missed_builds[i]/length_of_test, project_build_duration[i], 100*project_saved_builds[i]/length_of_test, project_delays[i], length_of_test, project_batch_delays[i]])
+                writer.writerow([p, alg, max_batch_size, confidence[i], 100*project_reqd_builds[i]/length_of_test, 100*project_missed_builds[i]/length_of_test, project_build_duration[i], 100*project_saved_builds[i]/length_of_test, project_delays[i], length_of_test, project_batch_delays[i], project_batch_medians[i], project_ci[i]])
     result_file.close()
 # In[ ]:
 
 
-#for pr in projects:
-#    static_rule(pr)
+for pr in projects:
+    static_rule(pr)
 # for pr in projects[1:]:
 #     static_rule(pr)
 #static_rule('sufia.csv')
