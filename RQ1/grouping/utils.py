@@ -36,7 +36,7 @@ cols_with_date.append('gh_build_started_at')
 
 project_list = [
     {
-        'name': 'gradle',
+        'name': 'heroku',
         'params': {'n_estimators': 10, 'max_depth': 10}
     }
 ]

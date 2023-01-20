@@ -31,7 +31,7 @@ def batch_bisect():
         l = IncrementalLearningModel(prj['name'], 'RF', 30, 1, hyper_params={'n_estimators': 10})
         y_proba, y_test = l.get_predicted_data()
 
-        b = BatchBisect(y_test, prj['name'], stop_at_4=False, batch_size_max=4)
+        b = BatchBisect(y_test, prj['name'], stop_at_4=False, batch_size_max=16)
         b.get_num_of_exec_per_batch_size()
 
         output += '{:28} | {} | {} | {}\n'.format(
@@ -79,7 +79,7 @@ def batch_stop_4():
         l = IncrementalLearningModel(prj['name'], 'RF', 30, 1, hyper_params={'n_estimators': 10})
         y_proba, y_test = l.get_predicted_data()
 
-        b = BatchBisect(y_test, prj['name'], stop_at_4=True, batch_size_max=8)
+        b = BatchBisect(y_test, prj['name'], stop_at_4=True, batch_size_max=16)
         b.get_num_of_exec_per_batch_size()
 
         output += '{:28} | {} | {} | {} \n'.format(

@@ -6,8 +6,8 @@ import numpy as np
 
 class BatchBisect:
     stop_at_4 = True
-    batch_size_min = 4
-    batch_size_max = 8
+    batch_size_min = 16
+    batch_size_max = 16
 
     batch_size_list = []
     num_of_exec_list = []
