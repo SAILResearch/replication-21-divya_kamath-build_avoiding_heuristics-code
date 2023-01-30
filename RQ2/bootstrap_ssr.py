@@ -158,7 +158,7 @@ def sbs(project_name, ver):
     best_f1_estimator = 0
     best_thresholds = []
     
-    for i in range(1):
+    for i in range(100):
         print('Bootstrapping {} for {}'.format(i, project_name))
         
         while True:

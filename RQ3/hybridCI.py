@@ -33,7 +33,7 @@ warnings.filterwarnings("ignore")
 # In[39]:
 
 
-project_list = ['graylog2-server.csv', 'rails.csv', 'jruby.csv', 'metasploit-framework.csv', 'vagrant.csv', 'opal.csv', 'cloudify.csv', 'cloud_controller_ng.csv', 'rubinius.csv', 'open-build-service.csv', 'gradle.csv', 'sonarqube.csv', 'loomio.csv', 'fog.csv', 'puppet.csv', 'concerto.csv', 'sufia.csv', 'geoserver.csv', 'orbeon-forms.csv']
+project_list = ['gradle.csv', 'graylog2-server.csv', 'rails.csv', 'jruby.csv', 'metasploit-framework.csv', 'vagrant.csv', 'opal.csv', 'cloudify.csv', 'cloud_controller_ng.csv', 'rubinius.csv', 'open-build-service.csv', 'sonarqube.csv', 'loomio.csv', 'fog.csv', 'puppet.csv', 'concerto.csv', 'sufia.csv', 'geoserver.csv', 'orbeon-forms.csv']
 
 # In[40]:
 
@@ -234,14 +234,14 @@ def batch_stop_4(batch_results, time_reqd):
 # In[50]:
 
 
-def bootstrapping(p_name):
+def bootstrapping(p_name, ver):
 
     global batch_total
     global batch_duration
     
     print('Processing {}'.format(p_name))
 
-    r_file_name = p_name.split('.')[0] + '_9_10_batching.csv'
+    r_file_name = 'model_results/' + p_name.split('.')[0] + '_' + str(ver) +'_batching.csv'
 
     result_file = open(r_file_name, 'w')
     result_headers = ['project', 'algorithm', 'batch_size', 'time_reqd', 'builds_reqd', 'total_delay', 'failures_found', 'failures_not_found', 'bad_builds', 'batch_delays', 'testall_size', 'ci']
@@ -260,7 +260,7 @@ def bootstrapping(p_name):
     forest = RandomForestClassifier()
     grid_search = GridSearchCV(estimator = forest, param_grid = param_grid, cv = 3, n_jobs = -1, verbose = 0)
     
-    pkl_file = '../data/data_pickles/' + p_name.split('.')[0] + '_indexes.pkl'
+    pkl_file = '../data/data_pickles/' + p_name + '_' + str(ver) + '_indexes.pkl'
     with open(pkl_file, 'rb') as load_file:
         train_build_ids = pickle.load(load_file)
         test_build_ids = pickle.load(load_file)
@@ -285,7 +285,7 @@ def bootstrapping(p_name):
 
         
     #bootstrap 100 times
-    for i in range(100):
+    for i in range(1):
         print('Bootstrapping {} for {}'.format(i, p_name))
 
         #Ensuring we get a non-zero training or testing sample
@@ -351,7 +351,7 @@ def bootstrapping(p_name):
     forest = RandomForestClassifier(n_estimators=int(n_estimator), max_depth=int(max_depth))
     forest.fit(best_f1_sample, best_f1_sample_result)
 
-    file_name = 'dump_data/rq3_' + p_name + '_best_model_9_10.pkl'
+    file_name = 'dump_data/rq3_' + p_name + '_' + str(ver) + '_best_model.pkl'
     dump_file = open(file_name, 'wb')
     pickle.dump(forest, dump_file)
     pickle.dump(threshold, dump_file)
@@ -576,8 +576,9 @@ def bootstrapping(p_name):
 # In[51]:
 #bootstrapping('cloudify.csv')
 
-'''for p in project_list[2:8]:
-    bootstrapping(p)'''
+for p in project_list[:1]:
+    for i in range(1, 11):
+        bootstrapping(p, i)
 
 
 # In[53]:
@@ -593,9 +594,9 @@ def bootstrapping(p_name):
 #    j.join()
 
 
-if __name__ == '__main__':
-	with multiprocess.Pool(5) as p:
-		p.map(bootstrapping, project_list[9:])
+# if __name__ == '__main__':
+# 	with multiprocess.Pool(5) as p:
+# 		p.map(bootstrapping, project_list[:])
 
 
 
@@ -636,457 +637,3 @@ if __name__ == '__main__':
 
 
 # In[20]:
-
-
-def normal_train_test(p_name):
-    
-    global batch_total
-    global batch_duration
-    
-    print('Processing {}'.format(p_name))
-    
-    performances = {'time_reqd':[], 'builds_reqd':[], 'total_delay':[], 'failures_found':[], 'failures_not_found':[]}
-    
-    #This will return the entire dataset with X and Y values
-    project = get_complete_data(p_name)
-    
-    #grid search hyperparameters
-    n_estimators = [int(x) for x in np.linspace(start = 200, stop = 2000, num = 10)]
-    max_depth = [int(x) for x in np.linspace(10, 110, num = 5)]
-    
-    #setting up grid search
-    param_grid = {'n_estimators': n_estimators, 'max_depth': max_depth}
-    forest = RandomForestClassifier()
-    grid_search = GridSearchCV(estimator = forest, param_grid = param_grid, cv = 3, n_jobs = -1, verbose = 0)
-    
-    pkl_file = '../data/even_data/first_failures/data_pickles/' + p_name.split('.')[0] + '_indexes.pkl'
-    with open(pkl_file, 'rb') as load_file:
-        train_build_ids = pickle.load(load_file)
-        test_build_ids = pickle.load(load_file)
-    
-    train_data = project [ project['tr_build_id'].isin(train_build_ids)]
-
-    test_data = project [ project['tr_build_id'].isin(test_build_ids)]
-    
-    print(train_data['git_diff_src_churn'].tolist())
-    
-    train_result = train_data['tr_status'].tolist()
-    test_result = test_data['tr_status'].tolist()
-    
-    train_data.drop('tr_build_id', inplace=True, axis=1)
-    train_data.drop('tr_status', inplace=True, axis=1)
-    
-    #add pass_streak to training data:
-    train_data['num_of_passes'] = get_pass_streak(train_result)
-    
-    
-    trainX, testX, trainY, testY = train_test_split(train_data, train_result, test_size=0.5, random_state=2, stratify=train_result)    
-
-    grid_search.fit(trainX, trainY)
-    
-    test_pred_vals = grid_search.predict_proba(testX)
-
-    pred_vals = test_pred_vals[:, 1]
-    fpr, tpr, t = roc_curve(testY, pred_vals)
-    gmeans = sqrt(tpr * (1-fpr))
-    ix = argmax(gmeans)
-    bt = t[ix]
-    
-
-    final_pred_result = []
-    #threshold setting
-    for j in range(len(pred_vals)):
-        if pred_vals[j] > bt:
-            final_pred_result.append(1)
-        else:
-            final_pred_result.append(0)
-
-    try:
-        f1 = f1_score(sample_test_result, final_pred_result)
-    except:
-        print('')
-    
-    
-
-    test_builds = test_data['tr_build_id'].tolist()
-    test_data.drop('tr_build_id', inplace=True, axis=1)
-    test_data.drop('tr_status', inplace=True, axis=1)
-
-
-    batchsizelist = [2, 4, 8, 16]
-    algorithms = ['BATCH4', 'BATCHSTOP4', 'BATCHBISECT']
-    
-    for alg in algorithms:
-        for batchsize in batchsizelist:
-            
-            pass_streak = 0
-            i = 0
-            total = len(test_data)
-            num_of_builds = 0
-
-            #The variable 'ci' will hold the actual execution process of the current phase
-            #If ci[i] == 0, it means that build was made
-            #If ci[i] == 1, it means that build was saved
-            ci = []
-                
-            if alg == 'BATCH4':
-                if batchsize != 4:
-                    continue
-                else:
-                        while i < total :
-                            data = test_data.iloc[i]
-                            data['num_of_passes'] = pass_streak
-                            predict = grid_search.predict_proba([data])
-
-                            #predicted that build has passed
-                            if predict[0][1] > bt:
-                                final_pred_result.append(1)
-                                ci.append(1)
-                                pass_streak += 1
-                                i+=1
-
-                            else:
-                                #We found first failure
-
-                                #Until an entire batch passes, we are going to continue group builds ie., subsequent failures are grouped
-                                while i < total:
-                                    if (total - i) > 4:
-                                        ci.extend([0,0,0,0])
-                                    else:
-                                        ci.extend([0 for e in range(total-i)])
-
-                                    num_of_builds += 1
-                                    actual_batch_results = test_result[i:i+4]
-
-                                    #if any build has failed in the batch, then whole batch will fail
-                                    if 0 in actual_batch_results:
-                                        i = i+4
-                                    else:
-                                        break
-                                #Now that we have found a passing build, we can update pass_streak to 1
-                                pass_streak = 1
-                                i += 4
-            
-            if alg == 'BATCHSTOP4':
-                if batchsize < 4:
-                    continue
-                else:
-                    pass_streak = 0
-                    ci = []
-                    while i < total :
-                        data = test_data.iloc[i]
-                        data['num_of_passes'] = pass_streak
-                        predict = grid_search.predict_proba([data])
-                        
-                        if predict[0][1] > bt:
-                            ci.append(1)
-                            pass_streak += 1
-                            i += 1
-                        else:
-                            
-                            while i < total:
-                                if (total - i) > batchsize:
-                                    ci.extend([0 for l in range(batchsize)])
-                                else:
-                                    ci.extend([0 for e in range(total-i)])
-                                
-                                grouped_batch_results = test_result[i:i+batchsize]
-                                batch_total = 0
-                                
-                                batch_stop_4(grouped_batch_results)
-                                num_of_builds += batch_total
-                                
-                                if 0 not in grouped_batch_results:
-                                    break
-                                else:
-                                    i += batchsize
-                                grouped_batch_results.clear()
-                            i += batchsize
-            
-            if alg == 'BATCHBISECT':
-                
-                pass_streak = 0
-                ci = []
-                
-                while i < total :
-                    data = test_data.iloc[i]
-                    data['num_of_passes'] = pass_streak
-                    predict = grid_search.predict_proba([data])
-                    
-                    if predict[0][1] > bt:
-                        ci.append(1)
-                        pass_streak += 1
-                        i += 1
-                    else:
-                        
-                        #this case is when model has predicted a failure
-                        #Add [i, i+batchsize] to a group and perform BatchBisect
-                        
-                        while i < total:
-                            
-                            #Next batch is being built, so add to ci
-                            if (total - i) > batchsize:
-                                ci.extend([0 for l in range(batchsize)])
-                            else:
-                                ci.extend([0 for e in range(total-i)])
-                            
-                            grouped_batch_results = test_result[i:i+batchsize]
-                            
-                            batch_total = 0
-                            
-                            batch_bisect(grouped_batch_results)
-                            num_of_builds += batch_total
-                            
-                            if 0 not in grouped_batch_results:
-                                break
-                            else:
-                                i += batchsize
-                                
-                            grouped_batch_results.clear()
-                        i += batchsize
-                    
-                    
-        
-
-    
-    print(ci)
-
-    batch_performance = hybrid_performance(p_name, test_builds, test_result, ci)
-    performances['time_reqd'].append(batch_performance[0])
-    performances['builds_reqd'].append(batch_performance[1])
-    performances['total_delay'].append(batch_performance[2])
-    performances['failures_found'].append(batch_performance[3])
-    performances['failures_not_found'].append(batch_performance[4])
-    
-    result_file = 'ml_results/' + p_name.split('.')[0] + '_result.txt'
-    fres = open(result_file, 'w+')
-    fres.write("Average Time Reqd in {} = {} \n".format(p_name, sum(performances['time_reqd'])/len(performances['time_reqd'])))
-    fres.write("Average Builds Reqd in {} = {} \n".format(p_name, sum(performances['builds_reqd'])/len(performances['builds_reqd'])))
-    fres.write("Average Total Delay in {} = {} \n".format(p_name, sum(performances['total_delay'])/len(performances['total_delay'])))
-    fres.write("Average Failed Identified in {} = {} \n".format(p_name, sum(performances['failures_found'])/len(performances['failures_found'])))
-    fres.write("Average Failed Unidentified in {} = {} \n".format(p_name, sum(performances['failures_not_found'])/len(performances['failures_not_found'])))
-
-    print('\n\n\n\n\n')
-
-
-# In[21]:
-
-
-#normal_train_test('rails.csv')
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-def kfolding(p_name):
-    
-    print('Processing {}'.format(p_name))
-    
-    performances = {'time_reqd':[], 'builds_reqd':[], 'total_delay':[], 'failures_found':[], 'failures_not_found':[]}
-    
-    #This will return the entire dataset with X and Y values
-    project = get_complete_data(p_name)
-    
-    #grid search hyperparameters
-    n_estimators = [int(x) for x in np.linspace(start = 200, stop = 2000, num = 10)]
-    max_depth = [int(x) for x in np.linspace(10, 110, num = 5)]
-    
-    #setting up grid search
-    param_grid = {'n_estimators': n_estimators, 'max_depth': max_depth}
-    forest = RandomForestClassifier()
-    grid_search = GridSearchCV(estimator = forest, param_grid = param_grid, cv = 3, n_jobs = -1, verbose = 0)
-    
-    pkl_file = '../data/even_data/first_failures/data_pickles/' + p_name.split('.')[0] + '_indexes.pkl'
-    with open(pkl_file, 'rb') as load_file:
-        train_build_ids = pickle.load(load_file)
-        test_build_ids = pickle.load(load_file)
-    
-    train_data = project [ project['tr_build_id'].isin(train_build_ids)]
-    train_data = get_first_failures(train_data)
-    test_data = project [ project['tr_build_id'].isin(test_build_ids)]
-    
-    train_result = train_data['tr_status'].tolist()
-    test_result = test_data['tr_status'].tolist()
-    
-    #add pass_streak to training data:
-    train_data['num_of_passes'] = get_pass_streak(train_result)
-    
-    best_n_estimators = []
-    best_max_depth = []
-
-    best_f1 = 0
-    best_f1_sample = 0
-    best_f1_sample_result = 0
-    best_f1_estimator = 0
-    best_thresholds = []
-    
-    KF = KFold(n_splits=8)
-    scores = cross_val_score(grid_search, train_data, train_result, scoring='precision', cv=3, n_jobs=-1)
-        
-    #bootstrap 10 times
-    for train_index, test_index in KF.split(X):
-
-        sample_train, sample_train_result = train_data[train_index], train_data[test_index]
-        sample_test, sample_test_result = train_result[train_index], train_result[test_index]
-        build_ids = sample_train['tr_build_id'].tolist()
-        sample_test = train_data [~train_data['tr_build_id'].isin(build_ids)] 
-        sample_test_result = sample_test['tr_status']
-
-        if len(sample_test_result) != 0:
-            break
-
-        #dropping result column and build ids column
-        sample_train.drop('tr_status', inplace=True, axis=1)
-        sample_train.drop('tr_build_id', inplace=True, axis=1)
-        sample_test.drop('tr_status', inplace=True, axis=1)
-        sample_test.drop('tr_build_id', inplace=True, axis=1)
-
-        #training the sample
-        print('Training {} for {}'.format(i, p_name))
-        grid_search.fit(sample_train, sample_train_result)
-        sample_pred_vals = grid_search.predict_proba(sample_test)
-
-        pred_vals = sample_pred_vals[:, 1]
-        fpr, tpr, t = roc_curve(sample_test_result, pred_vals)
-        gmeans = sqrt(tpr * (1-fpr))
-        ix = argmax(gmeans)
-        bt = t[ix]
-        best_thresholds.append(bt)
-
-        final_pred_result = []
-        #threshold setting
-        for j in range(len(pred_vals)):
-            if pred_vals[j] > bt:
-                final_pred_result.append(1)
-            else:
-                final_pred_result.append(0)
-
-        try:
-            f1 = f1_score(sample_test_result, final_pred_result)
-        except:
-            print('')
-
-        if f1 > best_f1:
-            best_f1 = f1
-            best_f1_sample = sample_train
-            best_f1_sample_result = sample_train_result
-            best_f1_estimator = grid_search.best_estimator_
-            
-        best_n_estimators.append(grid_search.best_params_['n_estimators'])
-        best_max_depth.append(grid_search.best_params_['max_depth'])
-        
-
-    #completed with bootstrapping 
-    threshold = median(best_thresholds)
-    n_estimator = median(best_n_estimators)
-    max_depth = median(best_max_depth)
-
-    #retrain to get the best model
-    forest = RandomForestClassifier(n_estimators=int(n_estimator), max_depth=int(max_depth))
-    forest.fit(best_f1_sample, best_f1_sample_result)
-
-    test_builds = test_data['tr_build_id'].tolist()
-    test_data.drop('tr_build_id', inplace=True, axis=1)
-    test_data.drop('tr_status', inplace=True, axis=1)
-
-    batch = []
-    actual_batch_results = []
-    max_batch_size = 4
-    final_pred_result = []
-    pass_streak = 0
-    i = 0
-    total = len(test_data)
-
-    num_of_builds = 0
-
-    #The variable 'ci' will hold the actual execution process of the current phase
-    #If ci[i] == 0, it means that build was made
-    #If ci[i] == 1, it means that build was saved
-    ci = []
-
-    while i < total :
-        data = test_data.iloc[i]
-        data['num_of_passes'] = pass_streak
-        predict = forest.predict_proba([data])
-#             print(predict)
-        #predicted that build has passed
-        if predict[0][1] > predict[0][0]:
-            final_pred_result.append(1)
-            ci.append(1)
-            pass_streak += 1
-            i+=1
-        else:
-            #We found first failure
-
-            #Until an entire batch passes, we are going to continue group builds ie., subsequent failures are grouped
-            while True:
-                if (total - i) > 4:
-                    ci.extend([0,0,0,0])
-                else:
-                    ci.extend([0 for e in range(total-i)])
-
-                num_of_builds += 1
-                actual_batch_results = test_result[i:i+4]
-
-                #if any build has failed in the batch, then whole batch will fail
-                if 0 in actual_batch_results:
-                    i = i+4
-                else:
-                    break
-            #Now that we have found a passing build, we can update pass_streak to 1
-            pass_streak = 1
-            i += 4
-
-    batch_performance = hybrid_performance(p_name, test_builds, test_result, ci)
-    performances['time_reqd'].append(batch_performance[0])
-    performances['builds_reqd'].append(batch_performance[1])
-    performances['total_delay'].append(batch_performance[2])
-    performances['failures_found'].append(batch_performance[3])
-    performances['failures_not_found'].append(batch_performance[4])
-    
-    result_file = 'ml_results/' + p_name.split('.')[0] + '_result.txt'
-    fres = open(result_file, 'w+')
-    fres.write("Average Time Reqd in {} = {} \n".format(p_name, sum(performances['time_reqd'])/len(performances['time_reqd'])))
-    fres.write("Average Builds Reqd in {} = {} \n".format(p_name, sum(performances['builds_reqd'])/len(performances['builds_reqd'])))
-    fres.write("Average Total Delay in {} = {} \n".format(p_name, sum(performances['total_delay'])/len(performances['total_delay'])))
-    fres.write("Average Failed Identified in {} = {} \n".format(p_name, sum(performances['failures_found'])/len(performances['failures_found'])))
-    fres.write("Average Failed Unidentified in {} = {} \n".format(p_name, sum(performances['failures_not_found'])/len(performances['failures_not_found'])))
-
-    print('\n\n\n\n\n')
-
