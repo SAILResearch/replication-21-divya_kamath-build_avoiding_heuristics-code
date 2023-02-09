@@ -106,18 +106,12 @@ def get_complete_data(p_name):
     project = pd.read_csv(filename)
     project = project.drop(project.columns[9], axis=1)
     project['tr_status'] = output_values(project['tr_status'])
+    project = get_first_failures(project)
     return project
 
 
 # In[45]:
 
-
-def get_required_data(p_name, build_ids):
-    
-    res_file = '../data/test_data/' + p_name.split('.')[0] + '_test.csv'
-    res_project = pd.read_csv(res_file, usecols = ['tr_build_id', 'tr_duration'])
-    durations = res_project[res_project['tr_build_id'].isin(build_ids)]['tr_duration'].tolist()
-    return durations
 
 
 # In[46]:
@@ -193,42 +187,37 @@ batch_duration = 0
 # In[48]:
 
 
-def batch_bisect(batch_results, time_reqd):
+def batch_bisect(batch_results):
     global batch_total
-    global batch_duration
     
     batch_total += 1
-    batch_duration += max(time_reqd)
     
     if len(batch_results) == 1:
         return
     
     if 0 in batch_results:
         half_batch = len(batch_results)//2
-        batch_bisect(batch_results[:half_batch], time_reqd[:half_batch])
-        batch_bisect(batch_results[half_batch:], time_reqd[half_batch:])
+        batch_bisect(batch_results[:half_batch])
+        batch_bisect(batch_results[half_batch:])
 
 
 # In[49]:
 
 
-def batch_stop_4(batch_results, time_reqd):
+def batch_stop_4(batch_results):
     global batch_total
-    global batch_duration
     
     batch_total += 1
-    batch_duration += max(time_reqd)
     
     if len(batch_results) <= 4:
         if 0 in batch_results:
             batch_total += 4
-            batch_duration += sum(time_reqd)
         return
     
     if 0 in batch_results:
         half_batch = len(batch_results)//2
-        batch_stop_4(batch_results[:half_batch], time_reqd[:half_batch])
-        batch_stop_4(batch_results[half_batch:], time_reqd[half_batch:])
+        batch_stop_4(batch_results[:half_batch])
+        batch_stop_4(batch_results[half_batch:])
 
 
 # In[50]:
@@ -244,7 +233,7 @@ def bootstrapping(p_name, ver):
     r_file_name = 'model_results/' + p_name.split('.')[0] + '_' + str(ver) +'_batching.csv'
 
     result_file = open(r_file_name, 'w')
-    result_headers = ['project', 'algorithm', 'batch_size', 'time_reqd', 'builds_reqd', 'total_delay', 'failures_found', 'failures_not_found', 'bad_builds', 'batch_delays', 'testall_size', 'ci']
+    result_headers = ['project', 'algorithm', 'batch_size', 'builds_reqd', 'total_delay', 'failures_found', 'failures_not_found', 'bad_builds', 'batch_delays', 'testall_size', 'ci']
     writer = csv.writer(result_file)
     writer.writerow(result_headers)
     
@@ -260,7 +249,7 @@ def bootstrapping(p_name, ver):
     forest = RandomForestClassifier()
     grid_search = GridSearchCV(estimator = forest, param_grid = param_grid, cv = 3, n_jobs = -1, verbose = 0)
     
-    pkl_file = '../data/data_pickles/' + p_name + '_' + str(ver) + '_indexes.pkl'
+    pkl_file = '../data/project_data_pickles/' + p_name + '_' + str(ver) + '_indexes.pkl'
     with open(pkl_file, 'rb') as load_file:
         train_build_ids = pickle.load(load_file)
         test_build_ids = pickle.load(load_file)
@@ -285,7 +274,7 @@ def bootstrapping(p_name, ver):
 
         
     #bootstrap 100 times
-    for i in range(1):
+    for i in range(100):
         print('Bootstrapping {} for {}'.format(i, p_name))
 
         #Ensuring we get a non-zero training or testing sample
@@ -360,7 +349,6 @@ def bootstrapping(p_name, ver):
 
 
     test_builds = test_data['tr_build_id'].tolist()
-    durations = get_required_data(p_name, test_builds)
     test_data.drop('tr_build_id', inplace=True, axis=1)
     test_data.drop('tr_status', inplace=True, axis=1)
 
@@ -448,11 +436,9 @@ def bootstrapping(p_name, ver):
 
                                     batch_delays += (batchsize - 1)*batchsize*0.5
 
-                                    batch_build_times = durations[i:i+4]
                                     actual_batch_results = test_result[i:i+4]
                                     
                                     num_of_builds += 1                                    
-                                    build_duration += max(batch_build_times)
                                         # print(batch_build_times)
                                         # print(durations)
                                         # print(test_result)
@@ -461,7 +447,6 @@ def bootstrapping(p_name, ver):
                                     if 0 in actual_batch_results:
                                         i = i+4
                                         num_of_builds += 4
-                                        build_duration += sum(batch_build_times)
                                     else:
                                         break
                                 #Now that we have found a passing build, we can update pass_streak to 1
@@ -495,13 +480,10 @@ def bootstrapping(p_name, ver):
                                 batch_delays += (batchsize - 1)*batchsize*0.5
                                 
                                 grouped_batch_results = test_result[i:i+batchsize]
-                                batch_build_times = durations[i:i+batchsize]
                                 batch_total = 0
-                                batch_duration = 0
                                 
-                                batch_stop_4(grouped_batch_results, batch_build_times)
+                                batch_stop_4(grouped_batch_results)
                                 num_of_builds += batch_total
-                                build_duration += batch_duration
                                 
                                 if 0 not in grouped_batch_results:
                                     break
@@ -541,14 +523,11 @@ def bootstrapping(p_name, ver):
                             batch_delays += (batchsize - 1)*batchsize*0.5
 
                             grouped_batch_results = test_result[i:i+batchsize]
-                            batch_build_times = durations[i:i+batchsize]
                             
                             batch_total = 0
-                            batch_duration = 0
                             
-                            batch_bisect(grouped_batch_results, batch_build_times)
+                            batch_bisect(grouped_batch_results)
                             num_of_builds += batch_total
-                            build_duration += batch_duration
                             
                             if 0 not in grouped_batch_results:
                                 break
@@ -567,16 +546,15 @@ def bootstrapping(p_name, ver):
             bad_builds = batch_performance[3]
 
             local_builds_reqd = 100*num_of_builds/total
-            local_time_reqd = 100*build_duration/sum(durations)
             
-            writer.writerow([p_name, alg, batchsize, local_time_reqd, local_builds_reqd, total_delay, failures_found, failures_not_found, bad_builds, batch_delays, total, ci])
+            writer.writerow([p_name, alg, batchsize, local_builds_reqd, total_delay, failures_found, failures_not_found, bad_builds, batch_delays, total, ci])
     print('\n\n\n\n\n')
 
 
 # In[51]:
 #bootstrapping('cloudify.csv')
 
-for p in project_list[:1]:
+for p in project_list[:6]:
     for i in range(1, 11):
         bootstrapping(p, i)
 
