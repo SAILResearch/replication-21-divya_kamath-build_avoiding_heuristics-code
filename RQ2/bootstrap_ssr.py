@@ -44,7 +44,7 @@ confidence = list(range(2,21,1))
 # In[19]:
 
 
-result_file = open('models.csv', 'w')
+result_file = open('others.csv', 'w')
 result_headers = ['version', 'project', 'algorithm', 'batch_size', 'confidence', 'project_reqd_builds', 'project_missed_builds', 'project_saved_builds', 'project_delays', 'testall_size', 'batch_delays', 'batch_median', 'ci']
 writer = csv.writer(result_file)
 writer.writerow(result_headers)
@@ -135,9 +135,6 @@ def sbs(project_name, ver):
     Y_train = X_train['tr_status'].tolist()
     
     X_test = project [ project['tr_build_id'].isin(test_build_ids)]
-    if len(X_test) == 0:
-        print('\n No test data')
-        return 0, 0, X_test
     #X_train.drop('tr_status', inplace=True, axis=1)
     #X_train.drop('tr_build_id', inplace=True, axis=1)
     
@@ -293,7 +290,7 @@ def static_rule(p, ver):
     global batch_total
     global batch_durations
     
-    result_file = open('models.csv', 'a+')
+    result_file = open('others.csv', 'a+')
     writer = csv.writer(result_file)
     
     p = p.split('.')[0]
@@ -731,9 +728,17 @@ def static_rule(p, ver):
 # In[ ]:
 
 
-for pr in projects[:1]:
-    for i in range(1,11):
-        static_rule(pr, i)
+static_rule('fog.csv', 10)
+static_rule('graylog2-server.csv', 2)
+static_rule('graylog2-server.csv', 3)
+static_rule('graylog2-server.csv', 4)
+static_rule('heroku.csv', 4)
+static_rule('orbeon-forms.csv', 8)
+static_rule('puppet.csv', 1)
+static_rule('puppet.csv', 2)
+static_rule('vagrant.csv', 1)
+static_rule('vagrant.csv', 2)
+
 # for pr in projects[1:]:
 #     static_rule(pr)
 #static_rule('sufia.csv')

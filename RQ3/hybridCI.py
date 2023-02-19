@@ -33,7 +33,7 @@ warnings.filterwarnings("ignore")
 # In[39]:
 
 
-project_list = ['gradle.csv', 'graylog2-server.csv', 'rails.csv', 'jruby.csv', 'metasploit-framework.csv', 'vagrant.csv', 'opal.csv', 'cloudify.csv', 'cloud_controller_ng.csv', 'rubinius.csv', 'open-build-service.csv', 'sonarqube.csv', 'loomio.csv', 'fog.csv', 'puppet.csv', 'concerto.csv', 'sufia.csv', 'geoserver.csv', 'orbeon-forms.csv']
+project_list = ['rails.csv', 'jruby.csv', 'metasploit-framework.csv', 'vagrant.csv', 'cloud_controller_ng.csv', 'rubinius.csv', 'open-build-service.csv', 'sonarqube.csv', 'puppet.csv', 'concerto.csv', 'sufia.csv', 'geoserver.csv', 'orbeon-forms.csv']
 
 # In[40]:
 
@@ -260,6 +260,8 @@ def bootstrapping(p_name, ver):
     train_result = train_data['tr_status'].tolist()
     test_result = test_data['tr_status'].tolist()
     
+    if len(test_result) == 0:
+        return 
     #add pass_streak to training data:
     train_data['num_of_passes'] = get_pass_streak(train_result)
     
@@ -554,7 +556,7 @@ def bootstrapping(p_name, ver):
 # In[51]:
 #bootstrapping('cloudify.csv')
 
-for p in project_list[:6]:
+for p in project_list[:3]:
     for i in range(1, 11):
         bootstrapping(p, i)
 

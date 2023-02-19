@@ -33,8 +33,9 @@ warnings.filterwarnings("ignore")
 # In[39]:
 
 
-project_list = ['gradle.csv', 'graylog2-server.csv', 'rails.csv', 'jruby.csv', 'metasploit-framework.csv', 'vagrant.csv', 'opal.csv', 'cloudify.csv', 'cloud_controller_ng.csv', 'rubinius.csv', 'open-build-service.csv', 'sonarqube.csv', 'loomio.csv', 'fog.csv', 'puppet.csv', 'concerto.csv', 'sufia.csv', 'geoserver.csv', 'orbeon-forms.csv', 'heroku.csv']
+project_list = ['graylog2-server.csv', 'rails.csv', 'jruby.csv', 'metasploit-framework.csv', 'cloud_controller_ng.csv', 'rubinius.csv', 'open-build-service.csv', 'sonarqube.csv', 'puppet.csv', 'concerto.csv', 'sufia.csv', 'geoserver.csv', 'orbeon-forms.csv', 'heroku.csv']
 
+project_list = ['puppet.csv']
 # In[40]:
 
 
@@ -239,7 +240,7 @@ def bootstrapping(p_name, ver):
     
     #This will return the entire dataset with X and Y values
     project = get_complete_data(p_name)
-    
+    print(project) 
     #grid search hyperparameters
     n_estimators = [int(x) for x in np.linspace(start = 200, stop = 2000, num = 10)]
     max_depth = [int(x) for x in np.linspace(10, 110, num = 5)]
@@ -346,6 +347,9 @@ def bootstrapping(p_name, ver):
     pickle.dump(threshold, dump_file)
     pickle.dump(n_estimator, dump_file)
     pickle.dump(max_depth, dump_file)
+
+    if len(test_result) == 0:
+        return
 
 
     test_builds = test_data['tr_build_id'].tolist()
@@ -554,10 +558,18 @@ def bootstrapping(p_name, ver):
 # In[51]:
 #bootstrapping('cloudify.csv')
 
-for p in project_list[12:]:
+for p in project_list:
     for i in range(1, 11):
         bootstrapping(p, i)
 
+
+bootstrapping('heroku.csv', 4)
+bootstrapping('orbeon-forms.csv', 9)
+bootstrapping('orbeon-forms.csv', 10)
+bootstrapping('graylog2-server.csv', 3)
+bootstrapping('graylog2-server.csv', 4)
+bootstrapping('vagrant.csv', 1)
+bootstrapping('vagrant.csv', 2)
 
 # In[53]:
 
