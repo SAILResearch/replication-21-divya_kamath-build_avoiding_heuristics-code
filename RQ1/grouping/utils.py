@@ -35,12 +35,10 @@ cols_with_date = cols[:]
 cols_with_date.append('gh_build_started_at')
 
 project_list = [
-    {
-        'name': 'heroku',
-        'params': {'n_estimators': 10, 'max_depth': 10}
-    }
-]
-''',
+    # {
+    #     'name': 'heroku',
+    #     'params': {'n_estimators': 10, 'max_depth': 10}
+    # },
     {
         'name': 'opal',
         'params': {'n_estimators': 10, 'max_depth': 10}
@@ -57,21 +55,74 @@ project_list = [
         'name': 'gradle',
         'params': {'n_estimators': 10, 'max_depth': 10}
     },
+    # {
+    #     'name': 'jruby',
+    #     'params': {'n_estimators': 10, 'max_depth': 10}
+    # },
+    # {
+    #     'name': 'orbeon-forms',
+    #     'params': {'n_estimators': 10, 'max_depth': 10}
+    # },
+    # {
+    #     'name': 'rails',
+    #     'params': {'n_estimators': 10, 'max_depth': 10}
+    # },
+    # {
+    #     'name': 'open-build-service',
+    #     'params': {'n_estimators': 10, 'max_depth': 10}
+    # },
+    # {
+    #     'name': 'cloud_controller_ng',
+    #     'params': {'n_estimators': 10, 'max_depth': 10}
+    # },
+    # {
+    #     'name': 'sufia',
+    #     'params': {'n_estimators': 10, 'max_depth': 10}
+    # },
+    # {
+    #     'name': 'geoserver',
+    #     'params': {'n_estimators': 10, 'max_depth': 10}
+    # },
+    # {
+    #     'name': 'rubinius',
+    #     'params': {'n_estimators': 10, 'max_depth': 10}
+    # },
+    # {
+    #     'name': 'cloudify',
+    #     'params': {'n_estimators': 10, 'max_depth': 10}
+    # },
+    # {
+    #     'name': 'concerto',
+    #     'params': {'n_estimators': 10, 'max_depth': 10}
+    # },
+    # {
+    #     'name': 'fog',
+    #     'params': {'n_estimators': 10, 'max_depth': 10}
+    # },
     {
-        'name': 'jruby',
+        'name': 'graylog2-server',
         'params': {'n_estimators': 10, 'max_depth': 10}
     },
     {
-        'name': 'orbeon-forms',
+        'name': 'puppet',
         'params': {'n_estimators': 10, 'max_depth': 10}
-    }
+    },
+    # {
+    #     'name': 'loomio',
+    #     'params': {'n_estimators': 10, 'max_depth': 10}
+    # },
+    # {
+    #     'name': 'sonarqube',
+    #     'params': {'n_estimators': 10, 'max_depth': 10}
+    # }
+
     # {
     #     'name': 'FenixEdu--fenixedu-academic',
     #     'params': {'n_estimators': 10, 'criterion': 'entropy'},
     #     'batch4': 943,
     #     'batch_bisect': 650
     # },
-]'''
+]
 
 # er_project_list = [
 #     'er-prj-1',

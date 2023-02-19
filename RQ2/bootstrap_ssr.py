@@ -36,7 +36,7 @@ algorithm = ['BATCHBISECT', 'BATCH4', 'BATCHSTOP4']
 # In[18]:
 
 
-projects = ['gradle.csv', 'rails.csv', 'jruby.csv', 'metasploit-framework.csv', 'cloudify.csv', 'vagrant.csv', 'rubinius.csv', 'open-build-service.csv', 'sonarqube.csv', 'loomio.csv', 'fog.csv', 'opal.csv', 'cloud_controller_ng.csv', 'puppet.csv', 'concerto.csv', 'sufia.csv', 'geoserver.csv', 'orbeon-forms.csv', 'graylog2-server.csv']
+projects = ['heroku.csv', 'gradle.csv', 'jruby.csv', 'metasploit-framework.csv', 'cloudify.csv', 'vagrant.csv', 'rubinius.csv', 'open-build-service.csv', 'sonarqube.csv', 'loomio.csv', 'fog.csv', 'opal.csv', 'cloud_controller_ng.csv', 'puppet.csv', 'concerto.csv', 'sufia.csv', 'geoserver.csv', 'orbeon-forms.csv', 'graylog2-server.csv']
 data_path = '../data/'
 confidence = list(range(2,21,1))
 #confidence = list(range(2,20))
@@ -44,7 +44,11 @@ confidence = list(range(2,21,1))
 # In[19]:
 
 
+<<<<<<< HEAD
 result_file = open('others.csv', 'w')
+=======
+result_file = open('heroku_results.csv', 'w')
+>>>>>>> 908e6ee (processing)
 result_headers = ['version', 'project', 'algorithm', 'batch_size', 'confidence', 'project_reqd_builds', 'project_missed_builds', 'project_saved_builds', 'project_delays', 'testall_size', 'batch_delays', 'batch_median', 'ci']
 writer = csv.writer(result_file)
 writer.writerow(result_headers)
@@ -94,11 +98,12 @@ def get_first_failures(df):
 # In[23]:
 
 
-def pd_get_train_test_data(file_path):
+def pd_get_train_test_data(file_path, first_failures=True):
     columns = ['tr_build_id', 'git_num_all_built_commits', 'git_diff_src_churn', 'git_diff_test_churn', 'gh_diff_files_modified', 'tr_status']
     X = pd.read_csv(file_path, usecols = columns)
     X['tr_status'] = output_values(X['tr_status'])
-    X = get_first_failures(X)
+    if first_failures:
+        X = get_first_failures(X)
     #X.drop('tr_status', inplace=True, axis=1)
     
     #return X, Y
@@ -287,37 +292,62 @@ def batch_stop_4(grouped_batch, actual_group_results):
 
 def static_rule(p, ver):
     
+    if (p == 'vagrant.csv') | (p == 'puppet.csv'):
+        if (ver == 1) | (ver == 2) :
+            return
+    if (p == 'fog.csv'):
+        if (ver == 10):
+            return
+    if (p == 'graylog2-server.csv'):
+        if (ver == 2) | (ver == 3) | (ver == 4) :
+            return
+    if (p == 'heroku.csv'):
+        if (ver == 4):
+            return
+    if (p == 'orbeon-forms.csv'):
+        if (ver == 8):
+            return
+    
+    
     global batch_total
     global batch_durations
     
+<<<<<<< HEAD
     result_file = open('others.csv', 'a+')
     writer = csv.writer(result_file)
+=======
+>>>>>>> 908e6ee (processing)
     
     p = p.split('.')[0]
+    
+    #result_file_name = p + '_rq2_results.csv'
+    result_file = open('heroku_results.csv', 'a+')
+    writer = csv.writer(result_file)
 
     
-    predictor, threshold, X_test = sbs(p, ver)
-    if len(X_test) == 0:
-        return
+    #predictor, threshold, X_test = sbs(p, ver)
+    #if len(X_test) == 0:
+    #    return
 
 
-    # model_file_name = 'rq2_dump_data/rq2_' + p + '_gfm_best_model.pkl'
-    # model_file = open(model_file_name, 'rb')
-    # predictor = pickle.load(model_file)
-    # threshold = pickle.load(model_file)
+    model_file_name = '../../RQ2-Models/' + p + '_models/rq2_' + p + '_' + str(ver) + '_best_model.pkl'
+    model_file = open(model_file_name, 'rb')
+    predictor = pickle.load(model_file)
+    threshold = pickle.load(model_file)
     
     #get the test data
     
-    # test_file = "../data/test_data/" + p + '_test.csv'
-    # Y_duration = get_durations(test_file)
+    test_file = "../data/full_data/" + p + '.csv'
 
-    # project =  pd_get_train_test_data(test_file)
-    # pkl_file = '../data/data_pickles/' + p + '_indexes.pkl'
-    # with open(pkl_file, 'rb') as load_file:
-    #     train_build_ids = pickle.load(load_file)
-    #     test_build_ids = pickle.load(load_file)
+    project = pd_get_train_test_data(test_file, first_failures=False)
+    ff_test = pd_get_train_test_data(test_file)
+    
+    pkl_file = '../data/project_data_pickles/' + p + '.csv_' + str(ver) + '_indexes.pkl'
+    with open(pkl_file, 'rb') as load_file:
+        train_build_ids = pickle.load(load_file)
+        test_build_ids = pickle.load(load_file)
 
-    # X_test = project [ project['tr_build_id'].isin(test_build_ids)]
+    X_test = project [ project['tr_build_id'].isin(test_build_ids)]
     Y_test = X_test['tr_status'].tolist()
 
     X_test.drop('tr_build_id', inplace=True, axis=1)
@@ -370,10 +400,8 @@ def static_rule(p, ver):
                 delay_durations = []
 
                 if pass_streak == 0:
-                    total_duration = Y_duration[0]
                     saved_builds = 0
                 else:
-                    total_duration = 0
                     saved_builds = 1
 
                 index = 1
@@ -689,14 +717,6 @@ def static_rule(p, ver):
                 while len(miss_indexes) > 0:
                         m_index = miss_indexes.pop()
                         delay_durations.append(length_of_test - m_index + 1)
-
-
-                '''print('\tFor confidence {}:'.format(c))
-                print('\t\tTotal builds needed : {}'.format(total_builds))
-                print('\t\tTotal number of missed builds : {}'.format(missed_builds))
-                print('\t\tTotal number of saved builds : {}'.format(saved_builds))
-                print('\t\tTotal duration of builds : {}'.format(total_duration))
-                print('\t\tTotal delays: {}'.format(delay_durations))'''
 
                 project_reqd_builds.append(total_builds)
                 project_missed_builds.append(missed_builds)

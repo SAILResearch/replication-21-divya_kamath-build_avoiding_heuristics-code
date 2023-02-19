@@ -107,11 +107,11 @@ class IncrementalLearningModel:
 
     def load_travis_dataset(self):
         from utils import cols_with_date
-        path = '../../data/train_data/' + self.project_name + '_train'
+        path = '../../data/full_data/' + self.project_name
         self.df = pd.read_csv('{}.csv'.format(path),
                               usecols=cols_with_date)
 
-        path = '../../data/test_data/' + self.project_name + '_test'
+        path = '../../data/full_data/' + self.project_name 
         self.df_test = pd.read_csv('{}.csv'.format(path),
                               usecols=cols_with_date)
         # print(self.df['gh_build_started_at'])
@@ -246,18 +246,19 @@ class IncrementalLearningModel:
             self.calc_scores()
             return self.y_proba, self.y_test
 
-        start = datetime.now()
+        # start = datetime.now()
 
-        min_date = self.df['gh_build_started_at'].min()
-        max_date = self.df['gh_build_started_at'].max()
+        # min_date = self.df['gh_build_started_at'].min()
+        # max_date = self.df['gh_build_started_at'].max()
 
-        date_range = pd.date_range(
-            min_date + timedelta(days=self.num_of_learn_days),
-            max_date - timedelta(days=self.num_of_predict_days),
-            normalize=True,
-            freq='{}D'.format(self.num_of_predict_days)
-        )
-
+        # date_range = pd.date_range(
+        #     min_date + timedelta(days=self.num_of_learn_days),
+        #     max_date - timedelta(days=self.num_of_predict_days),
+        #     normalize=True,
+        #     freq='{}D'.format(self.num_of_predict_days)
+        # )
+        # print(date_range)
+        
         '''for predict_date in date_range:
 
             partial_x_train, partial_x_test, partial_y_train, partial_y_test = self.split_train_test_dataset(
@@ -319,11 +320,13 @@ class IncrementalLearningModel:
         self.y_pred.extend(partial_y_pred)
         self.y_proba.extend(partial_y_proba)
 
-        stop = datetime.now()
-        self.time = stop - start
-        self.calc_scores()
-        self.save_cache()
-        #print(self.y_proba)
+        # stop = datetime.now()
+        # self.time = stop - start
+        # self.calc_scores()
+        # self.save_cache()
+        # #print(self.y_proba)
+
+        return [], test_df['tr_status'].tolist()
 
         return self.y_proba, self.y_test
 

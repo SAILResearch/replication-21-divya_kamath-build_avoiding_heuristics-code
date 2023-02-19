@@ -6,7 +6,7 @@ import numpy as np
 
 class BatchBisect:
     stop_at_4 = True
-    batch_size_min = 16
+    batch_size_min = 1
     batch_size_max = 16
 
     batch_size_list = []
@@ -90,9 +90,21 @@ class BatchBisect:
 
     def get_num_of_exec_per_batch_size(self):
 
-        batch_list = range(self.batch_size_min, self.batch_size_max + 1)
+        possibilities = [1, 2, 4, 8, 16]
+        
+        if self.stop_at_4 == True:
+            batch_list = [(lambda x: x if x >= 4 else 0)(x) for x in possibilities]
+            if self.batch_size_max == 4:
+                batch_list == 4
+        else:
+            batch_list = [(lambda x: x if x <= self.batch_size_max else 0)(x) for x in possibilities]
+
 
         for batch_size in batch_list:
+
+            if batch_size == 0:
+                continue
+
             self.num_of_exec = 0
             self.num_of_merge = 0
 
@@ -105,6 +117,13 @@ class BatchBisect:
                 writer = csv.writer(csv_file)
                 writer.writerow(headers)'''
 
+            filename = 'results/full_'+self.project_name+'.csv'
+            headers = ['batch_num', 'num_of_exec', 'difference']
+            with open(filename, 'w+') as csv_file:
+                writer = csv.writer(csv_file)
+                writer.writerow(headers)
+
+
             
             for i in range(0, len(self.y_test), batch_size):
                 prev_exec = self.num_of_exec
@@ -114,21 +133,18 @@ class BatchBisect:
                     selected_y_test = self.y_test[i:i + batch_size]
 
                 self.test_batch(selected_y_test)
-                with open('results/'+self.project_name+'.csv', 'a+') as file:
+                with open(filename, 'a+') as file:
                     writer = csv.writer(file)
                     writer.writerow([i+batch_size, self.num_of_exec, self.num_of_exec-prev_exec])
-                print((i+batch_size, self.num_of_exec, ))
-                #print((i+batch_size, self.num_of_exec)
+                #print((i+batch_size, self.num_of_exec, ))
+                
                 count += 1
             #print('count = ' + str(count))
             num_batches = len(self.y_test)//batch_size
 
             improvement = (1 - self.num_of_exec / len(self.y_test)) * 100
-            print(self.accuracy)
-            print(num_batches)
             accuracy = (self.accuracy / num_batches) * 100
             self.accuracy = accuracy
-            print(accuracy)
 
             if improvement > self.max_improvement:
                 self.max_improvement = improvement
@@ -151,7 +167,7 @@ class BatchBisect:
                 self.batch4_num_of_merge = self.num_of_merge
                 self.batch4_improvement = improvement
 
-            if batch_size == 6:
+            if batch_size == 1:
                 self.batch6_num_of_exec = self.num_of_exec
                 self.batch6_num_of_merge = self.num_of_merge
                 self.batch6_improvement = improvement
@@ -161,73 +177,120 @@ class BatchBisect:
                 self.batch8_num_of_merge = self.num_of_merge
                 self.batch8_improvement = improvement
 
-            if batch_size == 10:
+            if batch_size == 16:
                 self.batch10_num_of_exec = self.num_of_exec
                 self.batch10_num_of_merge = self.num_of_merge
                 self.batch10_improvement = improvement
 
+        self.print_report()
+
         return self.batch_size_list, self.improvement_list
 
     def print_report(self):
+
+        print('Project: {}'.format(self.project_name))
         print('Max Improvement: {:.2f}'.format(self.max_improvement))
-        print('{:.2f}%'.format(self.max_improvement))
+        #print('{:.2f}%'.format(self.max_improvement))
 
         print('Lowest Num of Exec: ', self.lowest_num_of_exec)
-        print(self.lowest_num_of_exec)
+        #print(self.lowest_num_of_exec)
 
         print('Optimum Num of Merge', self.optimum_num_of_merge)
-        print(self.optimum_num_of_merge)
+        #print(self.optimum_num_of_merge)
 
         print('Best Batch Size: ', self.best_batch_size)
-        print(self.best_batch_size)
+        #print(self.best_batch_size)
 
         print('TestAll Num of Exec: ', len(self.y_test))
-        print(len(self.y_test))
+        #print(len(self.y_test))
 
-        print('Batch2 Num of Exec:', self.batch2_num_of_exec)
-        print(self.batch2_num_of_exec)
+        output = "\n{:28} | {} | {} | {}\n".format('Batch Size', 'Number of build execution', 'Improvement over TestAll', 'Number of Merge')
+        output += '-' * 83
+        output += '\n'
 
-        print('Batch2 Num of Merge:', self.batch2_num_of_merge)
-        print(self.batch2_num_of_merge)
 
-        print('Batch2 Improvement:', self.batch2_improvement)
-        print(self.batch2_improvement)
+        # print('Batch1 Num of Exec:', self.batch6_num_of_exec)
+        # #print(self.batch6_num_of_exec)
 
-        print('Batch4 Num of Exec:', self.batch4_num_of_exec)
-        print(self.batch4_num_of_exec)
+        # print('Batch1 Num of Merge:', self.batch6_num_of_merge)
+        # #print(self.batch6_num_of_merge)
 
-        print('Batch4 Num of Merge:', self.batch4_num_of_merge)
-        print(self.batch4_num_of_merge)
+        # print('Batch1 Improvement:', self.batch6_improvement)
+        # #print(self.batch6_improvement)
 
-        print('Batch4 Improvement:', self.batch4_improvement)
-        print(self.batch4_improvement)
+        output += '{:28} | {} | {} | {} \n'.format(
+            str(1),
+            str(self.batch6_num_of_exec).center(25),
+            '{:.2f} %'.format(100-self.batch6_improvement).center(22),
+            str(self.batch6_improvement).center(25)
+        )
 
-        print('Batch6 Num of Exec:', self.batch6_num_of_exec)
-        print(self.batch6_num_of_exec)
+        # print('Batch2 Num of Exec:', self.batch2_num_of_exec)
+        # #print(self.batch2_num_of_exec)
 
-        print('Batch6 Num of Merge:', self.batch6_num_of_merge)
-        print(self.batch6_num_of_merge)
+        # print('Batch2 Num of Merge:', self.batch2_num_of_merge)
+        # #print(self.batch2_num_of_merge)
 
-        print('Batch6 Improvement:', self.batch6_improvement)
-        print(self.batch6_improvement)
+        # print('Batch2 Improvement:', self.batch2_improvement)
+        # #print(self.batch2_improvement)
 
-        print('Batch8 Num of Exec:', self.batch8_num_of_exec)
-        print(self.batch8_num_of_exec)
+        output += '{:28} | {} | {} | {} \n'.format(
+            str(2),
+            str(self.batch2_num_of_exec).center(25),
+            '{:.2f} %'.format(100-self.batch2_improvement).center(22),
+            str(self.batch2_improvement).center(25)
+        )
 
-        print('Batch8 Num of Merge:', self.batch8_num_of_merge)
-        print(self.batch8_num_of_merge)
+        # print('Batch4 Num of Exec:', self.batch4_num_of_exec)
+        # #print(self.batch4_num_of_exec)
 
-        print('Batch8 Improvement:', self.batch8_improvement)
-        print(self.batch8_improvement)
+        # print('Batch4 Num of Merge:', self.batch4_num_of_merge)
+        # #print(self.batch4_num_of_merge)
 
-        print('Batch10 Num of Exec:', self.batch10_num_of_exec)
-        print(self.batch10_num_of_exec)
+        # print('Batch4 Improvement:', self.batch4_improvement)
+        # #print(self.batch4_improvement)
 
-        print('Batch10 Num of Merge:', self.batch10_num_of_merge)
-        print(self.batch10_num_of_merge)
+        output += '{:28} | {} | {} | {} \n'.format(
+            str(4),
+            str(self.batch4_num_of_exec).center(25),
+            '{:.2f} %'.format(100-self.batch4_improvement).center(22),
+            str(self.batch4_improvement).center(25)
+        )
 
-        print('Batch10 Improvement:', self.batch10_improvement)
-        print(self.batch10_improvement)
+        # print('Batch8 Num of Exec:', self.batch8_num_of_exec)
+        # #print(self.batch8_num_of_exec)
+
+        # print('Batch8 Num of Merge:', self.batch8_num_of_merge)
+        # #print(self.batch8_num_of_merge)
+
+        # print('Batch8 Improvement:', self.batch8_improvement)
+        # #print(self.batch8_improvement)
+
+        output += '{:28} | {} | {} | {} \n'.format(
+            str(8),
+            str(self.batch8_num_of_exec).center(25),
+            '{:.2f} %'.format(100-self.batch8_improvement).center(22),
+            str(self.batch8_improvement).center(25)
+        )
+
+        # print('Batch16 Num of Exec:', self.batch10_num_of_exec)
+        # #print(self.batch10_num_of_exec)
+
+        # print('Batch16 Num of Merge:', self.batch10_num_of_merge)
+        # #print(self.batch10_num_of_merge)
+
+        # print('Batch16 Improvement:', self.batch10_improvement)
+        # #print(self.batch10_improvement)
+
+        output += '{:28} | {} | {} | {} \n'.format(
+            str(16),
+            str(self.batch10_num_of_exec).center(25),
+            '{:.2f} %'.format(100-self.batch10_improvement).center(22),
+            str(self.batch10_improvement).center(25)
+        )
+
+
+        print(output)
 
     def plot_batch_size_histogram(self):
         plt.hist(self.batch_size_list)

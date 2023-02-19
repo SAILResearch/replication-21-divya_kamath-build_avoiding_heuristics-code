@@ -28,7 +28,7 @@ def batch_bisect():
     print('Creating learning model for each project ...')
 
     for prj in project_list:
-        l = IncrementalLearningModel(prj['name'], 'RF', 30, 1, hyper_params={'n_estimators': 10})
+        l = IncrementalLearningModel(prj['name'], 'RF', 0, 0, hyper_params={'n_estimators': 10})
         y_proba, y_test = l.get_predicted_data()
 
         b = BatchBisect(y_test, prj['name'], stop_at_4=False, batch_size_max=16)
@@ -41,7 +41,7 @@ def batch_bisect():
             str(b.accuracy).center(25)
         )
 
-    print(output)
+    #print(output)
 
 
 def batch_4():
@@ -65,7 +65,7 @@ def batch_4():
             str(b.accuracy).center(25)
         )
 
-    print(output)
+    #print(output)
 
 
 def batch_stop_4():
@@ -89,7 +89,7 @@ def batch_stop_4():
             str(b.accuracy).center(25)
         )
 
-    print(output)
+    #print(output)
 
 
 def risk_top_n():
