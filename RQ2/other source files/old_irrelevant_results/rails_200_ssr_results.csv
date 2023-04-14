@@ -1,6 +1,0 @@
-project,method,algorithm,batch_size,builds_reqd,batch_delays,sbs_delays,confidence
-rails.csv,ssr,BATCHBISECT,2,39.13337707519531,416.0,180,3
-rails.csv,ssr,BATCHBISECT,4,0,0,0,0
-rails.csv,ssr,BATCHBISECT,8,0,0,0,0
-rails.csv,ssr,BATCHBISECT,16,0,0,0,0
-rails.csv,ssr,BATCH4,4,20.717670440673828,684.0,490,20

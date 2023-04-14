@@ -1,5 +1,0 @@
-Average Time Reqd in chef = 5.200386327739606 
-Average Builds Reqd in chef = 4.636601735144868 
-Average Total Delay in chef = 619.5 
-Average Failed Identified in chef = 13.125 
-Average Failed Unidentified in chef = 86.875Total Train & Test lengths = 1137, 395

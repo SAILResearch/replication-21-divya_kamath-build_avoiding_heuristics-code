@@ -1,5 +1,0 @@
-Average Time Reqd in Hydra.csv = 0.0 
-Average Builds Reqd in Hydra.csv = 0.0 
-Average Total Delay in Hydra.csv = 4.0 
-Average Failed Identified in Hydra.csv = 0.0 
-Average Failed Unidentified in Hydra.csv = 100.0 

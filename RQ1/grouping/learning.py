@@ -107,11 +107,11 @@ class IncrementalLearningModel:
 
     def load_travis_dataset(self):
         from utils import cols_with_date
-        path = '../../data/full_data/' + self.project_name
+        path = '../../data/exact_data/' + self.project_name
         self.df = pd.read_csv('{}.csv'.format(path),
                               usecols=cols_with_date)
 
-        path = '../../data/full_data/' + self.project_name 
+        path = '../../data/exact_data/' + self.project_name 
         self.df_test = pd.read_csv('{}.csv'.format(path),
                               usecols=cols_with_date)
         # print(self.df['gh_build_started_at'])

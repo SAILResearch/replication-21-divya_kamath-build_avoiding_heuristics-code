@@ -1,5 +1,0 @@
-Average Time Reqd in AsciidocFX.csv = 0.0 
-Average Builds Reqd in AsciidocFX.csv = 0.0 
-Average Total Delay in AsciidocFX.csv = 19.0 
-Average Failed Identified in AsciidocFX.csv = 0.0 
-Average Failed Unidentified in AsciidocFX.csv = 100.0 

@@ -1,5 +1,0 @@
-Average Time Reqd in HearthSim.csv = 0.0 
-Average Builds Reqd in HearthSim.csv = 0.0 
-Average Total Delay in HearthSim.csv = 12.0 
-Average Failed Identified in HearthSim.csv = 0.0 
-Average Failed Unidentified in HearthSim.csv = 100.0 

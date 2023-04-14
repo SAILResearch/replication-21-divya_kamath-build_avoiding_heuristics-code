@@ -1,5 +1,0 @@
-Average Time Reqd in jruby = 22.463256113507086 
-Average Builds Reqd in jruby = 19.131296681741873 
-Average Total Delay in jruby = 292.0 
-Average Failed Identified in jruby = 82.55657138227888 
-Average Failed Unidentified in jruby = 17.443428617721132Total Train & Test lengths = 5805, 968
