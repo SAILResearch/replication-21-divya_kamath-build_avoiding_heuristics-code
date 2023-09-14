@@ -260,7 +260,7 @@ def bootstrapping(p_name, train_data, count):
 
 
     #bootstrap 100 times
-    for i in range(10):
+    for i in range(100):
         print('Bootstrapping {} for {}'.format(i, p_name))
 
         #Ensuring we get a non-zero training or testing sample
@@ -570,7 +570,6 @@ def mlci_process(p_name):
 
 for p in project_list[:]:
     mlci_process(p)
-    break
 
 
 # In[ ]:
