@@ -26,16 +26,21 @@ import pickle
 import csv
 import warnings
 import datetime
-import multiprocess
-from batching_algs import *
-from mlci_bootstrapping import *
-warnings.filterwarnings("ignore")
+import multiprocessing
+from joblib import Parallel, delayed
+
+warnings.filterwarnings("ignore", UserWarning)
+#warnings.filterwarnings("ignore", SettingWithCopyWarning)
+
 
 
 # In[2]:
 
+num_cores = multiprocessing.cpu_count()
+pd.options.mode.chained_assignment = None  # default='warn'
 
-project_list = ['heroku.csv', 'rails.csv', 'gradle.csv', 'jruby.csv', 'metasploit-framework.csv', 'cloudify.csv', 'vagrant.csv', 'rubinius.csv', 'open-build-service.csv', 'sonarqube.csv', 'loomio.csv', 'fog.csv', 'opal.csv', 'cloud_controller_ng.csv', 'puppet.csv', 'concerto.csv', 'sufia.csv', 'geoserver.csv', 'orbeon-forms.csv', 'graylog2-server.csv']
+
+project_list = ['jruby.csv', 'metasploit-framework.csv', 'cloudify.csv', 'vagrant.csv', 'rubinius.csv', 'open-build-service.csv', 'sonarqube.csv', 'loomio.csv', 'fog.csv', 'opal.csv', 'cloud_controller_ng.csv', 'puppet.csv', 'concerto.csv', 'sufia.csv', 'geoserver.csv', 'orbeon-forms.csv', 'graylog2-server.csv']
 
 
 
@@ -287,9 +292,13 @@ def bootstrapping(p_name, train_data, count):
         grid_search.fit(sample_train, sample_train_result)
         sample_pred_vals = grid_search.predict_proba(sample_test)
         
-        print(sample_train_result)
+        empty_np_array = np.empty([len(sample_test), 1])
+        if sample_pred_vals.shape == empty_np_array.shape:
+            pred_vals = sample_pred_vals[:, 0]
+        else:
+            pred_vals = sample_pred_vals[:, 1]
 
-        pred_vals = sample_pred_vals[:, 1]
+
         fpr, tpr, t = roc_curve(sample_test_result, pred_vals)
         gmeans = sqrt(tpr * (1-fpr))
         ix = argmax(gmeans)
@@ -352,6 +361,7 @@ def mlci_process(p_name):
     print('Processing {}'.format(p_name))
 
     result_rows = []
+    empty_prediction = np.empty([1, 2])
     
     project = get_complete_data(p_name, first_failures=False)
     
@@ -391,6 +401,7 @@ def mlci_process(p_name):
         batch_delays = 0
         final_pred_result = []
 
+
         for alg in algorithms:
             for batchsize in batchsizelist:
 
@@ -415,10 +426,16 @@ def mlci_process(p_name):
                             while i < total :
                                 data = test_data.iloc[i]
                                 data['num_of_passes'] = pass_streak
+                                
                                 predict = forest.predict_proba([data])
 
+                                if predict.shape == empty_prediction.shape:
+                                    prediction = predict[0][1]
+                                else:
+                                    prediction = predict[0]
+
                                 #predicted that build has passed
-                                if predict[0][1] > threshold:
+                                if prediction > threshold:
                                     final_pred_result.append(1)
                                     ci.append(1)
                                     pass_streak += 1
@@ -464,7 +481,12 @@ def mlci_process(p_name):
                             data['num_of_passes'] = pass_streak
                             predict = forest.predict_proba([data])
 
-                            if predict[0][1] > threshold:
+                            if predict.shape == empty_prediction.shape:
+                                prediction = predict[0][1]
+                            else:
+                                prediction = predict[0]
+
+                            if prediction > threshold:
                                 ci.append(1)
                                 pass_streak += 1
                                 i += 1
@@ -503,7 +525,12 @@ def mlci_process(p_name):
                         data['num_of_passes'] = pass_streak
                         predict = forest.predict_proba([data])
 
-                        if predict[0][1] > threshold:
+                        if predict.shape == empty_prediction.shape:
+                            prediction = predict[0][1]
+                        else:
+                            prediction = predict[0]
+
+                        if prediction > threshold:
                             ci.append(1)
                             pass_streak += 1
                             i += 1
@@ -567,9 +594,8 @@ def mlci_process(p_name):
 
 # In[19]:
 
+output = Parallel(n_jobs=8)(delayed(mlci_process)(p_name) for p_name in project_list)
 
-for p in project_list[:]:
-    mlci_process(p)
 
 
 # In[ ]:
