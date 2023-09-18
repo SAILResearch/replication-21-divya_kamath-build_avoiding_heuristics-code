@@ -29,14 +29,14 @@ import datetime
 import multiprocessing
 from joblib import Parallel, delayed
 
-warnings.filterwarnings("ignore", UserWarning)
-#warnings.filterwarnings("ignore", SettingWithCopyWarning)
+warnings.filterwarnings("ignore")
 
 
 
 # In[2]:
 
 num_cores = multiprocessing.cpu_count()
+cores_used = num_cores/5
 pd.options.mode.chained_assignment = None  # default='warn'
 
 
@@ -373,13 +373,14 @@ def mlci_process(p_name):
     while end_p <= len(project):
         
         window = project[start_p:end_p]
-        print(start_p, end_p, len(window))
         
-        train_size = int(len(window)*0.7)
-        test_size = len(window) - train_size
+        train_start = start_p
+        train_end = start_p + int(0.7*len(window))
+        test_start = train_end
+        test_end = end_p
         
-        train_data = window[:train_size]
-        test_data = window[train_size:]
+        train_data = project[train_start:train_end]
+        test_data = project[test_start:test_end]
         
         forest, threshold = bootstrapping(p_name, train_data, end_p)
         if type(forest) == type(int):
@@ -575,7 +576,7 @@ def mlci_process(p_name):
                 local_builds_reqd = 100*num_of_builds/total
 
                 #print([p_name, alg, batchsize, local_builds_reqd, total_delay, failures_found, failures_not_found, bad_builds, batch_delays, total, ci])
-                result_rows.append([p_name, start_p, end_p, alg, batchsize, local_builds_reqd, total_delay, failures_found, failures_not_found, bad_builds, batch_delays, total, ci])
+                result_rows.append([p_name, test_start, test_end, alg, batchsize, local_builds_reqd, total_delay, failures_found, failures_not_found, bad_builds, batch_delays, total, ci])
                 if total != len(ci):
                     print('PROBLEM!!')
                 else:
@@ -594,7 +595,8 @@ def mlci_process(p_name):
 
 # In[19]:
 
-output = Parallel(n_jobs=8)(delayed(mlci_process)(p_name) for p_name in project_list)
+print(len(project_list))
+output = Parallel(n_jobs=cores_used)(delayed(mlci_process)(p_name) for p_name in project_list[:8])
 
 
 
