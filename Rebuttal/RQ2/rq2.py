@@ -596,7 +596,7 @@ def mlci_process(p_name):
 # In[19]:
 
 print(len(project_list))
-output = Parallel(n_jobs=cores_used)(delayed(mlci_process)(p_name) for p_name in project_list[:8])
+output = Parallel(n_jobs=15)(delayed(mlci_process)(p_name) for p_name in project_list[:8])
 
 
 
