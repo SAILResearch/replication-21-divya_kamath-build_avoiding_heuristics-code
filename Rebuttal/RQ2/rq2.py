@@ -240,7 +240,7 @@ def bootstrapping(p_name, train_data, count):
     #setting up grid search
     param_grid = {'n_estimators': n_estimators, 'max_depth': max_depth}
     forest = RandomForestClassifier()
-    grid_search = GridSearchCV(estimator = forest, param_grid = param_grid, cv = 3, n_jobs = -1, verbose = 0)
+    grid_search = GridSearchCV(estimator = forest, param_grid = param_grid, cv = 3, n_jobs = 40, verbose = 0)
     
     print(len(train_data))
     if len(train_data) <= 1:
@@ -595,9 +595,11 @@ def mlci_process(p_name):
 
 # In[19]:
 
-print(len(project_list))
-output = Parallel(n_jobs=15)(delayed(mlci_process)(p_name) for p_name in project_list[:8])
+# print(len(project_list))
+# output = Parallel(n_jobs=15)(delayed(mlci_process)(p_name) for p_name in project_list[:8])
 
+for p_name in project_list[8:]:
+    mlci_process(p_name)
 
 
 # In[ ]:
