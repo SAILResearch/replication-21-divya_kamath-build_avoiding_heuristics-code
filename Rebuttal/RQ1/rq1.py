@@ -472,6 +472,8 @@ def sbs_process(p_name):
 
 
         delay = total_delay
+        if delay == []:
+            delay = [0]
         
         result_rows.append([p_name, start_p, end_p, reqd_builds, delay, median(delay), sum(delay), total_builds, ci])
     
@@ -501,7 +503,7 @@ def sbs_process(p_name):
     
 
 final_rows = []
-for p_name in project_list[:1]:
+for p_name in project_list[3:]:
     rows = sbs_process(p_name)
     print(rows)
     final_rows.extend(rows)
