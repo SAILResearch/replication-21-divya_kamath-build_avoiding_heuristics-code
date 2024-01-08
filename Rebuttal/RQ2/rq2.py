@@ -149,7 +149,16 @@ def get_complete_data(p_name, first_failures=True):
     
     #open the metrics file
     filename = 'project_metrics/' + p_name.split('.')[0] + '_metrics.csv'
-    project = pd.read_csv(filename)
+    project = pd.read_csv(filename)    
+    build_ids = project['tr_build_id'].tolist()
+    
+    duration_file = pd.read_csv('../../data/full_data/' + p_name, usecols=['tr_build_id', 'tr_duration'])
+    given_builds = duration_file[ duration_file['tr_build_id'].isin(build_ids)]
+    
+    duration_project = pd.merge(project, given_builds, on='tr_build_id')
+    duration_project.to_csv(p_name + '_duration.csv')
+    
+    
     project = project.drop(project.columns[9], axis=1)
     project['tr_status'] = output_values(project['tr_status'])
     if first_failures:
@@ -364,6 +373,7 @@ def mlci_process(p_name):
     empty_prediction = np.empty([1, 2])
     
     project = get_complete_data(p_name, first_failures=False)
+    return
     
     #sliding window parameters
     window_size = len(project)//5
@@ -382,10 +392,10 @@ def mlci_process(p_name):
         train_data = project[train_start:train_end]
         test_data = project[test_start:test_end]
         
-        forest, threshold = bootstrapping(p_name, train_data, end_p)
-        if type(forest) == type(int):
-            print("Ending at {}".format(end_p))
-            break
+#         forest, threshold = bootstrapping(p_name, train_data, end_p)
+#         if type(forest) == type(int):
+#             print("Ending at {}".format(end_p))
+#             break
     
         test_result = test_data['tr_status'].tolist()
 
@@ -598,7 +608,7 @@ def mlci_process(p_name):
 # print(len(project_list))
 # output = Parallel(n_jobs=15)(delayed(mlci_process)(p_name) for p_name in project_list[:8])
 
-for p_name in project_list[8:]:
+for p_name in project_list[:]:
     mlci_process(p_name)
 
 

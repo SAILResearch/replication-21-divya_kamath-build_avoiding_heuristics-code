@@ -149,7 +149,7 @@ def get_complete_data(p_name, first_failures=True):
     
     #open the metrics file
     filename = '../../data/full_data/' + p_name
-    columns = ['tr_build_id', 'git_num_all_built_commits', 'git_diff_src_churn', 'git_diff_test_churn', 'gh_diff_files_modified', 'tr_status']
+    columns = ['tr_build_id', 'git_num_all_built_commits', 'git_diff_src_churn', 'git_diff_test_churn', 'gh_diff_files_modified', 'tr_duration', 'tr_status']
     project = pd.read_csv(filename, usecols = columns)
     project['tr_status'] = output_values(project['tr_status'])
     if first_failures:
@@ -357,6 +357,8 @@ def sbs_process(p_name):
     
     p = p_name.split('.')[0]
     
+    path = 'dump_data/' + p + '_models/rq1_' + p_name + '_'
+    
     print('Processing {}'.format(p_name))
 
     result_rows = []
@@ -381,12 +383,17 @@ def sbs_process(p_name):
         train_data = project[train_start:train_end]
         test_data = project[test_start:test_end]
         
-        forest, threshold = bootstrapping(p_name, train_data, end_p)
+        #forest, threshold = bootstrapping(p_name, train_data, end_p)
+        model_file_name = path + str(end_p) + '_best_model.pkl'
+        model_file = open(model_file_name, 'rb')
+        forest = pickle.load(model_file)
+        
         if type(forest) == type(int):
             print("Ending at {}".format(end_p))
             break
     
         test_result = test_data['tr_status'].tolist()
+        test_duration = test_data['tr_duration'].tolist()
 
         if len(test_result) == 0:
             return 
@@ -394,6 +401,10 @@ def sbs_process(p_name):
         test_builds = test_data['tr_build_id'].tolist()
         test_data.drop('tr_build_id', inplace=True, axis=1)
         test_data.drop('tr_status', inplace=True, axis=1)
+        test_data.drop('tr_duration', inplace=True, axis=1)
+        
+        actual_duration = sum(test_duration)
+        project_duration = 0
 
         batchsizelist = [2, 4, 8, 16]
         algorithms = ['BATCH4', 'BATCHSTOP4', 'BATCHBISECT']
@@ -422,6 +433,7 @@ def sbs_process(p_name):
             if first_failure == 1:
                 ci.append(0)
                 sbs_builds += 1
+                project_duration += test_duration[i]
 
                 if actual_results[i] == 1:
                     #actual build pass is seen, switch to prediction
@@ -436,6 +448,7 @@ def sbs_process(p_name):
                     #if predicted to fail, we switch to determine state and set first_failure to True
                     ci.append(0)
                     sbs_builds += 1
+                    project_duration += test_duration[i]
                     first_failure = 1-actual_results[i]
 
 
@@ -475,7 +488,7 @@ def sbs_process(p_name):
         if delay == []:
             delay = [0]
         
-        result_rows.append([p_name, start_p, end_p, reqd_builds, delay, median(delay), sum(delay), total_builds, ci])
+        result_rows.append([p_name, start_p, end_p, reqd_builds, delay, median(delay), sum(delay), project_duration, actual_duration, total_builds, ci])
     
 
 
@@ -503,14 +516,14 @@ def sbs_process(p_name):
     
 
 final_rows = []
-for p_name in project_list[3:]:
+for p_name in project_list:
     rows = sbs_process(p_name)
     print(rows)
     final_rows.extend(rows)
 
 print('converting to csv')
-df = pd.DataFrame(final_rows, columns=['project', 'start_p', 'end_p', 'builds_reqd', 'delay_list', 'median_delay', 'sum_delay', 'length', 'ci'])
-n = p_name + '_sbs_sw.csv'
+df = pd.DataFrame(final_rows, columns=['project', 'start_p', 'end_p', 'builds_reqd', 'delay_list', 'median_delay', 'sum_delay', 'project_duration', 'actual_duration', 'length', 'ci'])
+n = 'rq1_sbs_sw.csv'
 df.to_csv(n)
 
 # In[ ]:
